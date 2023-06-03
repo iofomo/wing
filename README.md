@@ -1,7 +1,5 @@
 # REPO操作指南
 
-[TOC]
-
 ### 说明
 
 **`repo`工程：**即repo管理的多个`git`代码组本地的目录结构，这里称`代码组`。
@@ -377,43 +375,3 @@ $ repo -push
 # git push origin HEAD:refs/heads/${origin branch name}
 $ repo -push f
 ```
-
-### 发布
-
-组件和模块发布至`maven`，需要进行操作。<span style="color:blue;">【暂仅支持单文件发布】</span>
-
-1）确保拥有代码发布权限（联系管理员申请）。
-
-2）配置`maven`的`settings.xml`，参考：https://packages.aliyun.com/repos/2329890-release-p4fCcu/guide
-
-3）在工程目录创建`pom.json`文件
-
-```json
-{
-    "mvn": [
-        {
-            "groupId": "ifma-cmpt",// 
-            "artifactId": "utils-debug",
-            "version": "1.0-SNAPSHOT",// 版本号包含`-SNAPSHOT`则会发布至非生产库-snapshot
-            "file": "build/outputs/aar/ifma-cmpt-utils-debug.aar",
-            "packaing": "aar"
-        },
-        {
-            "groupId": "ifma-cmpt",
-            "artifactId": "utils",
-            "version": "1.0",// 版本号不包含`-SNAPSHOT`则会发布至生产库-release
-            "file": "build/outputs/aar/ifma-cmpt-utils-release.aar",// 目标库文件，支持绝对路径
-            "packaing": "aar"
-        }
-    ]
-}
-```
-
-4）执行编译（如：`repo -build`），确保待发布文件存在。
-
-5）执行发布
-
-```shell
-$ repo -publish
-```
-
