@@ -84,12 +84,12 @@ def doCmdCall(cmd):
     return -100
 
 
-def doRepoSync(path, userName):
+def doRepoSync(path):
     repoPath = path + os.sep + '.repo'
     if not os.path.isdir(repoPath):
         os.makedirs(repoPath)
 
-    fetchGitRepo(repoPath, userName)
+    fetchGitRepo(repoPath)
     doCmd('chmod a+x %s ' % repoPath)
 
 
@@ -118,18 +118,6 @@ def getCurrentBranch(path):
         b = b[1:].strip()
         return b
     return ''
-
-
-def getConfigFromLocal(path, k):
-    try:
-        path = path + os.sep + '.repo' + os.sep + 'cache.json'
-        with open(path, 'rb') as f:
-            content = f.read()
-        jdata = json.loads(content)
-        return jdata['repo'][k] if 'repo' in jdata else None
-    except Exception as e:
-        println(e)
-    return None
 
 
 def getRepoVersion(rf):
@@ -161,7 +149,7 @@ def compareVer(_sVer, _dVer):
     return 0
 
 
-def fetchGitRepo(repoPath, userName):
+def fetchGitRepo(repoPath):
     println('check repo')
     relPath = repoPath + os.sep + 'repo'  # /home/{project name}/.repo/repo
     if os.path.isdir(relPath):  # Exist, then git pull
@@ -269,12 +257,12 @@ def run():
         return
 
     if cmd == 'init':
-        doRepoSync(g_repo_path, sys.argv[3])
+        doRepoSync(g_repo_path)
         cmd = 'cd %s/.repo/repo && python manager/repo_init.py %s %s ' % (g_repo_path, g_repo_path, ' '.join(sys.argv[2:]))
     elif cmd == 'sync':
         assert None != g_repo_path, 'Invalid repo project'
         argvs = parseSyncArguments(sys.argv)
-        doRepoSync(g_repo_path, getConfigFromLocal(g_repo_path, 'name'))
+        doRepoSync(g_repo_path)
         cmd = 'cd %s/.repo/repo && python manager/repo_sync.py %s %s' % (g_repo_path, g_repo_path, ' '.join(argvs[2:]))
     elif cmd == 'manifest':
         println('Ignore command: ' + ' '.join(sys.argv))
