@@ -4,7 +4,7 @@
 
 import os, sys
 
-from manager import repo_init
+from manager.repo_init import switchBranch
 
 g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
@@ -61,7 +61,7 @@ class RepoExtend:
         assert 0 == ret or '0' == ret, 'git command fail'
 
     def doSwitch(self, argv):
-        repo_init.switchBranch(self.mRepoPath, argv[0])
+        switchBranch(self.mRepoPath, argv[0])
         LoggerUtils.light('done.')
 
     def doProject(self, argv):
