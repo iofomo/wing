@@ -1,0 +1,5 @@
+0="# Group • Document（doc）"
+1="# Platform • Document（platform/doc）"
+2="# Module • Document"
+3=">  Last modify: %s (%s) <span style="color:red;">[NEW]</span>"
+4=">  Last modify: %s (%s) "
