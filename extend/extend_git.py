@@ -193,8 +193,7 @@ def doCreateProject(baseBranch, newBranch, buildNo, project):
     git.fetchBranch(newBranch, False)
     cfg = g_repo_path + os.sep + project + '/branchCreator.py'
     if not os.path.exists(cfg): return
-    ret = CmnUtils.doCmdCall(
-        'cd %s && python %s %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
+    ret = CmnUtils.doCmdCall('cd %s && python %s %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
     assert 0 == ret or '0' == ret, 'Error: Update version fail ' + project
 
 

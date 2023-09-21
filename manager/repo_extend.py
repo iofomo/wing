@@ -29,33 +29,28 @@ class RepoExtend:
 
     def doBuild(self, argv):
         projPath = self.__getProjectPath__(self.mRepoPath)
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_build.py %s %s %s' % (
-        self.mRepoPath, self.mRepoPath, projPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_build.py %s %s %s' % (self.mRepoPath, self.mRepoPath, projPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'Build fail'
         LoggerUtils.light('done.')
 
     def doClean(self, argv):
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_clean.py %s %s %s' % (
-        self.mRepoPath, self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_clean.py %s %s %s' % (self.mRepoPath, self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'Clean fail'
         LoggerUtils.light('done.')
 
     def doRefresh(self, argv):
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_refresh.py %s %s' % (
-        self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_refresh.py %s %s' % (self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'refresh fail'
         LoggerUtils.light('done.')
 
     def doADB(self, argv):
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_adb.py %s %s' % (
-        self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_adb.py %s %s' % (self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'adb fail'
         LoggerUtils.light('done.')
 
     def doGit(self, argv):
         projPath = self.__getProjectPath__(self.mRepoPath, '.git/config')
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_git.py %s %s %s' % (
-        self.mRepoPath, projPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_git.py %s %s %s' % (self.mRepoPath, projPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'git command fail'
 
     def doSwitch(self, argv):
@@ -64,8 +59,7 @@ class RepoExtend:
 
     def doProject(self, argv):
         projPath = self.__getProjectPath__(self.mRepoPath, '.git/config')
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_project.py %s %s %s' % (
-        self.mRepoPath, projPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_project.py %s %s %s' % (self.mRepoPath, projPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'project command fail'
 
     def doSetProperty(self, k, v):
@@ -80,8 +74,7 @@ class RepoExtend:
         for k, v in items.items(): LoggerUtils.info(k + '=' + v)
 
     def doKey(self, argv):
-        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_key.py %s %s' % (
-        self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
+        ret = CmnUtils.doCmdCall('cd %s/.repo/repo && python extend/extend_key.py %s %s' % (self.mRepoPath, self.mEnvPath, CmnUtils.joinArgs(argv)))
         assert 0 == ret or '0' == ret, 'fail'
         LoggerUtils.light('done.')
 

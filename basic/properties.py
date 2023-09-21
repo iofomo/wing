@@ -32,7 +32,6 @@ class BasicPropertiesItem:
         return self.val
 
     def setValue(self, v):
-        assert self.val is not None, 'Invalid value: None'
         self.val = v
 
     def println(self):

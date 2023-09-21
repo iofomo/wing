@@ -96,8 +96,7 @@ def doCreate(envPath, _type, _mode):
         LoggerUtils.light('>>> ' + prvtFile[len(envPath) + 1:])
         LoggerUtils.light('>>> ' + pubFile[len(envPath) + 1:])
         return
-    LoggerUtils.error('UNsupport key create: ' + ('none' if CmnUtils.isEmpty(_type) else _type) + ', ' + (
-        'none' if CmnUtils.isEmpty(_mode) else _mode))
+    LoggerUtils.error('UNsupport key create: ' + ('none' if CmnUtils.isEmpty(_type) else _type) + ', ' + ('none' if CmnUtils.isEmpty(_mode) else _mode))
 
 
 def doHash(str):

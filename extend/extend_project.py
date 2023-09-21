@@ -102,7 +102,6 @@ class ProjectCollector:
         return True
 
     def scanPath(self, path, level):
-        # 获取该目录下所有的文件名称和目录名称
         ll = os.listdir(path)
         for l in ll:
             if l.startswith('.'): continue

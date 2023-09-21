@@ -26,9 +26,9 @@ except Exception as e:
     pass
 
 # repo version, repo -v
-g_ver = '0.9'
+g_ver = '0.9.1'
 # repo publish time, repo -v
-g_date = '2023.05.12'
+g_date = '2023.09.12'
 g_git_host = 'git@github.com:iofomo'
 g_git_repo_remote = 'repo'
 g_git_repo_branch = 'main'
@@ -157,8 +157,7 @@ def fetchGitRepo(repoPath):
     else:  # Not exist, then clone
         if not os.path.exists(repoPath): os.makedirs(repoPath)
         doCmd('cd %s && git clone %s/%s' % (repoPath, g_git_host, g_git_repo_remote))
-        assert os.path.isdir(
-            relPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_repo_remote + ' !'
+        assert os.path.isdir(relPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_repo_remote + ' !'
 
     if hasBranch(relPath, g_git_repo_branch):
         ret = doCmdCall('cd %s && git checkout %s' % (relPath, g_git_repo_branch))
@@ -278,12 +277,10 @@ def run():
         cmd = 'cd %s/.repo/repo && python manager/repo_git.py %s %s' % (g_repo_path, g_repo_path, cmdStr)
     elif cmd.startswith('-'):
         assert None != g_repo_path, 'Invalid repo project'
-        cmd = 'cd %s/.repo/repo && python manager/repo_extend.py %s %s %s' % (
-        g_repo_path, g_repo_path, g_env_path, ' '.join(sys.argv[1:]))
+        cmd = 'cd %s/.repo/repo && python manager/repo_extend.py %s %s %s' % (g_repo_path, g_repo_path, g_env_path, ' '.join(sys.argv[1:]))
     else:
         assert None != g_repo_path, 'Invalid repo project'
-        cmd = 'cd %s/.repo/repo && python manager/repo_git.py %s %s' % (
-        g_repo_path, g_repo_path, ' '.join(sys.argv[1:]))
+        cmd = 'cd %s/.repo/repo && python manager/repo_git.py %s %s' % (g_repo_path, g_repo_path, ' '.join(sys.argv[1:]))
     # println(cmd)
     ret = doCmdCall(cmd)
     assert 0 == ret or '0' == ret, 'Error: fail'

@@ -232,8 +232,7 @@ class RepoGit:
         try:
             os.makedirs(tmpPath)
             CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, RepoConfig.getGitRemoteHost(), projectServer))
-            assert os.path.isdir(
-                tmpPath + os.sep + sname + os.sep + '.git'), 'Make sure have correct access rights for ' + projectServer + ' !'
+            assert os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'), 'Make sure have correct access rights for ' + projectServer + ' !'
 
             pp = os.path.dirname(localPath)
             if not os.path.isdir(pp): os.makedirs(pp)

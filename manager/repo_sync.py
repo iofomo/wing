@@ -18,8 +18,7 @@ from manager.repo_manifest import ManifestHandler
 # ----------------------------------------------------------------------------------------------------------------------
 def doRefresh():
     LoggerUtils.println('do refresh ...')
-    cmd = 'cd %s/.repo/repo && python manager/repo_extend.py %s %s %s' % (
-    RepoEnv.getRootPath(), RepoEnv.getRootPath(), os.getcwd(), '-refresh')
+    cmd = 'cd %s/.repo/repo && python manager/repo_extend.py %s %s %s' % (RepoEnv.getRootPath(), RepoEnv.getRootPath(), os.getcwd(), '-refresh')
     ret = CmnUtils.doCmdCall(cmd)
     assert 0 == ret or '0' == ret, 'Error: refresh fail'
 

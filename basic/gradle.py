@@ -138,8 +138,6 @@ class BasicGradle:
         for module in self.mModules:
             fname = self.mPath + os.sep + module + '/build.gradle'
             if not os.path.exists(fname): continue
-            fname = self.mPath + os.sep + module + '/.checkignore'
-            if os.path.exists(fname): continue
             modules.append(module)
         return modules
 
@@ -151,7 +149,7 @@ class BasicGradle:
 
 
 def run():
-    g = BasicGradle('/Users/xxx/workspace/demo/abc')
+    g = BasicGradle('/Users/xxx/workspace/xxx/abc')
     g.println()
     print(g.isValid())
     print(g.getAndroidTestModules())
