@@ -108,21 +108,14 @@ class WingSync:
 
 
 def run():
-    forceSwitch, ignoreFail, projectPath = False, False, None
-    if 2 < len(sys.argv):
-        for arg in sys.argv[2:]:
+    forceSwitch, ignoreFail = False, False
+    if 3 < len(sys.argv):
+        for arg in sys.argv[3:]:
             if '-f' == arg:
                 forceSwitch = True
             elif '-i' == arg:
                 ignoreFail = True
-            else:
-                projectPath = arg
-
-    if None == projectPath:
-        return WingSync.doSync(forceSwitch, ignoreFail)
-
-    projectPath = projectPath.strip('/')
-    return WingSync.doSyncProject(forceSwitch, ignoreFail, projectPath)
+    return WingSync.doSync(forceSwitch, ignoreFail)
 
 
 if __name__ == "__main__":
