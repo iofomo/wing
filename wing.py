@@ -283,9 +283,9 @@ def run():
     else:
         assert not isEmpty(g_space_path), 'Invalid wing workspace'
         cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[1:]))
-    println(cmd)
-    # ret = doCmdCall(cmd)
-    # assert 0 == ret or '0' == ret, 'Error: fail'
+    # println(cmd)
+    ret = doCmdCall(cmd)
+    assert 0 == ret or '0' == ret, 'Error: fail'
 
 
 if __name__ == "__main__":

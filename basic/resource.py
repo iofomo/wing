@@ -21,7 +21,7 @@ class Resource:
     def __do_init__(cls):
         cls.sRes = {}
         path = os.path.dirname(g_this_path)
-        f = path + 'res/res-' + CmnUtils.getLanguageName() + '.txt'
+        f = path + '/res/res-' + CmnUtils.getLanguageName() + '.txt'
         with open(f, 'rb') as f:
             while True:
                 line = f.readline().decode()
