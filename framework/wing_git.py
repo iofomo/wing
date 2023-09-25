@@ -13,13 +13,13 @@ from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from framework.wing_env import WingEnv
-from framework.wing_git import WingGit
 
 ImportUtils.initEnv()
 
 
 # ------------------------------------------------------------------------------------------------------------------------
 class WingGit:
+
     @staticmethod
     def getGitProjects():
         projects = []

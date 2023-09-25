@@ -169,20 +169,20 @@ def fetchGitWing(wingPath):
     elif os.path.isfile(wingPath + '/framework/wing_init.py'):  # Exist, then local mode
         print('Info: local mode')
     else: # Not exist, then clone
-        doCmd('cd %s && git clone %s/%s' % (wingPath, g_git_host, g_git_wing_remote))
+        doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
         assert os.path.isdir(wingPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
 
-    if hasBranch(wingPath, g_git_wing_remote):
+    if hasBranch(wingPath, g_git_wing_branch):
         ret = doCmdCall('cd %s && git checkout %s' % (wingPath, g_git_wing_branch))
-        assert 0 == ret or '0' == ret, 'Error: git checkout origin'
+        assert ret is None or 0 == ret or '0' == ret, 'Error: git checkout origin'
     else:
         ret = doCmdCall('cd %s && git checkout -b %s origin/%s' % (wingPath, g_git_wing_branch, g_git_wing_branch))
-        assert 0 == ret or '0' == ret, 'Error: git checkout origin'
+        assert ret is None or 0 == ret or '0' == ret, 'Error: git checkout origin'
 
     assert getCurrentBranch(wingPath) == g_git_wing_branch
 
     ret = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
-    assert 0 == ret or '0' == ret, 'Error: git pull origin'
+    assert ret is None or 0 == ret or '0' == ret, 'Error: git pull origin'
     println('check wing done.')
 
     localVer = getVersion(g_wing_path + '/wing.py')
