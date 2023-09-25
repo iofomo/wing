@@ -16,7 +16,7 @@ from utils.utils_logger import LoggerUtils
 class BasicPropertiesItem:
 
     def __init__(self, k, v=None):
-        if None == v: assert k.startswith('#'), 'Invalid key: ' + k
+        assert v is not None or k.startswith('#'), 'Invalid key: ' + k
         self.key, self.val = k, v
 
     def matchKey(self, k):
@@ -41,24 +41,24 @@ class BasicPropertiesItem:
             LoggerUtils.println(self.key + '=' + self.val)
 
 
-class BasicProperties():
+class BasicProperties:
     def __init__(self):
         self.properties = []
 
     def hasKey(self, key):
-        assert None != key and 0 < len(key), 'Invalid key: ' + key
+        assert not CmnUtils.isEmpty(key), 'Invalid key: ' + key
         for p in self.properties:
             if p.matchKey(key): return True
         return False
 
     def get(self, key, default_value=None):
-        assert None != key and 0 < len(key), 'Invalid key: ' + key
+        assert not CmnUtils.isEmpty(key), 'Invalid key: ' + key
         for p in self.properties:
             if p.matchKey(key): return p.getValue()
         return default_value
 
     def put(self, key, value=None):
-        assert None != key and 0 < len(key), 'Invalid key: ' + key
+        assert not CmnUtils.isEmpty(key), 'Invalid key: ' + key
         if value is None: assert key.startswith('#')
         for p in self.properties:
             if p.matchKey(key):
@@ -67,7 +67,7 @@ class BasicProperties():
         self.properties.append(BasicPropertiesItem(key, value))
 
     def remove(self, key):
-        assert None != key and 0 < len(key), 'Invalid key: ' + key
+        assert not CmnUtils.isEmpty(key), 'Invalid key: ' + key
         for p in self.properties:
             if p.matchKey(key):
                 self.properties.remove(p)
@@ -78,7 +78,7 @@ class BasicProperties():
             lines = f.readlines()
         for line in lines:
             line = line.strip()
-            if len(line) <= 0: continue
+            if CmnUtils.isEmpty(line): continue
             if line.startswith('#'):
                 self.put(line)
                 continue
@@ -94,7 +94,7 @@ class BasicProperties():
             lines = f.readlines()
         for line in lines:
             line = line.strip()
-            if len(line) <= 0: continue
+            if CmnUtils.isEmpty(line): continue
             if line.startswith('#'): continue
             pos = line.find('=')
             if pos <= 0: continue
@@ -107,7 +107,7 @@ class BasicProperties():
             lines = f.readlines()
         for line in lines:
             line = line.strip()
-            if len(line) <= 0: continue
+            if CmnUtils.isEmpty(line): continue
             if line.startswith('#'): continue
             pos = line.find('=')
             if pos <= 0: continue
@@ -119,7 +119,7 @@ class BasicProperties():
         with open(fileName, 'w') as f:
             for p in self.properties:
                 v = p.getValue()
-                if None == v:
+                if CmnUtils.isEmpty(v):
                     f.write(p.getKey() + '\n')
                 else:
                     f.write(p.getKey() + '=' + v + '\n')

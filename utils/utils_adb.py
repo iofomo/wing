@@ -14,7 +14,7 @@ from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
+ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------

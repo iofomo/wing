@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# @brief: parse config of .repo project
+# @brief: parse config of .wing project
 # @date:   2023.05.10 14:40:50
 import os, sys
 from xml import sax
@@ -16,7 +16,7 @@ from basic.xmlreader import BasicXmlReader
 
 
 # --------------------------------------------------------------------------------------------------------------------------
-class BasicRepoManifestGroup:
+class BasicSpaceManifestGroup:
     """
     <default revision="main" remote="origin" sync-j="4"/>
     """
@@ -54,7 +54,7 @@ class BasicRepoManifestGroup:
         LoggerUtils.println('revision: ' + self.revision)
 
 
-class BasicRepoManifestProject:
+class BasicSpaceManifestProject:
     """
     <project path="build" name="xxx/build">
         <copyfile src="build.sh" dest="build.sh"/>
@@ -92,7 +92,7 @@ class BasicRepoManifestProject:
         LoggerUtils.println('revision: ' + self.revision)
 
 
-class BasicRepoManifest(sax.ContentHandler):
+class BasicSpaceManifest(sax.ContentHandler):
     """
     <?xml version='1.0' encoding='UTF-8'?>
     <manifest>
@@ -110,7 +110,7 @@ class BasicRepoManifest(sax.ContentHandler):
 
     def __init__(self, xml):
         self.tag = ""
-        self.group = BasicRepoManifestGroup()
+        self.group = BasicSpaceManifestGroup()
         self.project = None
         self.projects = []
         self.__doParseXml(xml)
@@ -134,36 +134,32 @@ class BasicRepoManifest(sax.ContentHandler):
             self.group.setRemote(attributes["remote"])
             self.group.setSyncJ(attributes["sync-j"])
         elif tag == "project":
-            self.project = BasicRepoManifestProject()
+            self.project = BasicSpaceManifestProject()
             self.project.setPath(attributes["path"])
             self.project.setName(attributes["name"])
             if "revision" in attributes: self.project.setRevision(attributes["revision"])
             self.projects.append(self.project)
-        elif tag == "depend":
-            self.group.setDependPlatform(attributes["platform"])
-            self.group.setDependRevision(attributes["revision"])
 
 
-class BasicRepoIn:
-    def __init__(self, repoPath):
+class BasicSpace:
+    def __init__(self, spacePath):
         self.mConfig = {}
-        self.mPath = repoPath
+        self.mPath = spacePath
         self.mManifest = None
-        sys.path.append(repoPath + '/python/')
 
     def __parse_config__(self):
-        jrepo = FileUtils.loadJsonByFile(self.mPath + '/.repo/cache.json')
-        assert 'group' in jrepo, 'Invalid repo project !!!'
-        self.mConfig['group'] = jrepo['group']
-        if 'name' in jrepo: self.mConfig['name'] = jrepo['name']
-        if 'branch' in jrepo: self.mConfig['branch'] = jrepo['branch']
-        if 'manifest' in jrepo:
-            self.mConfig['manifest'] = jrepo['manifest']
+        jdata = FileUtils.loadJsonByFile(self.mPath + '/.wing/wing.json')
+        assert 'group' in jdata, 'Invalid workspace !'
+        self.mConfig['group'] = jdata['group']
+        if 'name' in jdata: self.mConfig['name'] = jdata['name']
+        if 'branch' in jdata: self.mConfig['branch'] = jdata['branch']
+        if 'manifest' in jdata:
+            self.mConfig['manifest'] = jdata['manifest']
         else:
             self.mConfig['manifest'] = self.__parse_manifest__()
 
     def __parse_manifest__(self):
-        xr = BasicXmlReader(self.mPath + '/.repo/manifest.xml')
+        xr = BasicXmlReader(self.mPath + '/.wing/manifest.xml')
         return xr.getAttributeByElementIndex('include', 0, 'name')
 
     def __getItem__(self, k):
@@ -174,7 +170,7 @@ class BasicRepoIn:
     def updateBranch(self, branch):
         if len(self.mConfig) <= 0: self.__parse_config__()
         self.mConfig['branch'] = branch
-        FileUtils.saveJsonToFile(self.mPath + '/.repo/config.json', self.mConfig)
+        FileUtils.saveJsonToFile(self.mPath + '/.wing/wing.json', self.mConfig)
 
     def getGroup(self):
         return self.__getItem__('group')
@@ -186,7 +182,7 @@ class BasicRepoIn:
         return self.__getItem__('manifest')
 
     def getManifestFile(self):
-        return self.mPath + '/.repo/manifests/' + self.getManifest()
+        return self.mPath + '/.wing/manifests/' + self.getManifest()
 
     def getBranch(self):
         return self.__getItem__('branch')
@@ -202,18 +198,9 @@ class BasicRepoIn:
 
     def __get_manifest__(self):
         if None == self.mManifest:
-            self.mManifest = BasicRepoManifest(self.getManifestFile())
+            self.mManifest = BasicSpaceManifest(self.getManifestFile())
         return self.mManifest
 
     def println(self):
         if len(self.mConfig) <= 0: self.__parse_config__()
         for k, v in self.mConfig.items(): LoggerUtils.println(k + ': ' + v)
-
-
-def run():
-    pass
-    # BasicRepoIn('/Users/xxx/workspace/demo').println()
-
-
-if __name__ == "__main__":
-    run()

@@ -7,7 +7,7 @@ from utils.utils_logger import LoggerUtils
 
 
 # -------------------------------------------------------------
-class RepoGroup:
+class WingGroup:
     """
     <default revision="main" remote="origin" sync-j="4"/>
     """

@@ -14,12 +14,11 @@ from utils.utils_logger import LoggerUtils
 from utils.utils_file import FileUtils
 from utils.utils_import import ImportUtils
 from basic.git import BasicGit
-from basic.repoin import BasicRepoIn
+from basic.space import BasicSpace
 from basic.arguments import BasicArgumentsValue
 from extend.extend_base import ExtendBase
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+g_wing_path = ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
@@ -53,18 +52,18 @@ class ExtendBranch(ExtendBase):
         ExtendBase.__init__(self, path)
         self.mResults = results
 
-    def onProjectCall(self, repo, project):
+    def onProjectCall(self, space, project):
         pname = project.getPath()
-        projPath = self.mBaseRepoPath + os.sep + pname
+        projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
-            self.parseBranch(self.mBaseRepoPath + os.sep + '.repo/repo', '.repo/repo')
-            self.parseBranch(self.mBaseRepoPath + os.sep + '.repo/manifests', '.repo/manifests')
+            self.parseBranch(g_wing_path, '.wing/wing')
+            self.parseBranch(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
         remote = project.getRevision()
-        if CmnUtils.isEmpty(remote): remote = repo.getBranch()
+        if CmnUtils.isEmpty(remote): remote = space.getBranch()
         self.parseBranch(projPath, pname, remote)
 
     def parseBranch(self, projPath, pname, remote=None):
-        git = BasicGit(g_repo_path, projPath)
+        git = BasicGit(projPath)
         branch = git.getCurrentBranch()
         branch = 'null' if CmnUtils.isEmpty(branch) else branch
         self.mResults.append([pname, branch, remote])
@@ -75,18 +74,18 @@ class ExtendStatus(ExtendBase):
         ExtendBase.__init__(self, path)
         self.mResults = results
 
-    def onProjectCall(self, repo, project):
+    def onProjectCall(self, space, project):
         pname = project.getPath()
-        projPath = self.mBaseRepoPath + os.sep + pname
+        projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
-            self.parseBranch(self.mBaseRepoPath + os.sep + '.repo/repo', '.repo/repo')
-            self.parseBranch(self.mBaseRepoPath + os.sep + '.repo/manifests', '.repo/manifests')
+            self.parseBranch(g_wing_path, '.wing/wing')
+            self.parseBranch(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
         remote = project.getRevision()
-        if CmnUtils.isEmpty(remote): remote = repo.getBranch()
+        if CmnUtils.isEmpty(remote): remote = space.getBranch()
         self.parseBranch(projPath, pname, remote)
 
     def parseBranch(self, projPath, pname, remote=None):
-        git = BasicGit(g_repo_path, projPath)
+        git = BasicGit(projPath)
         status = 'changed' if git.isChanged() else ''
         branch = git.getCurrentBranch()
         branch = 'null' if CmnUtils.isEmpty(branch) else branch
@@ -94,7 +93,7 @@ class ExtendStatus(ExtendBase):
 
 
 def pushToRemoteGit(gitPath, isForce):
-    git = BasicGit(g_repo_path, gitPath)
+    git = BasicGit(gitPath)
     if not git.isAheadOfRemote(): return -1, None
     branch = None
     try:
@@ -116,12 +115,12 @@ class ExtendPush(ExtendBase):
         self.isForce = isForce
         self.mResults = results
 
-    def onProjectCall(self, repo, project):
+    def onProjectCall(self, space, project):
         pname = project.getPath()
-        projPath = self.mBaseRepoPath + os.sep + pname
+        projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
-            self.doPush(self.mBaseRepoPath + os.sep + '.repo/repo', '.repo/repo')
-            self.doPush(self.mBaseRepoPath + os.sep + '.repo/manifests', '.repo/manifests')
+            self.doPush(g_wing_path, '.wing/wing')
+            self.doPush(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
         self.doPush(projPath, pname)
 
     def doPush(self, gitPath, pname):
@@ -130,23 +129,23 @@ class ExtendPush(ExtendBase):
         self.mResults.append([pname, branch, 1 == ret])
 
 
-def pushGroupToRemote(projPath, envPath, isForce):
+def pushGroupToRemote(spacePath, envPath, projPath, isForce):
     results = []
-    git = BasicGit(g_repo_path, envPath)
+    git = BasicGit(envPath)
     if git.isValidGit():
         ret, branch = pushToRemoteGit(envPath, isForce)
-        if 0 <= ret: results.append([projPath[len(g_repo_path) + 1:], branch, 1 == ret])
+        if 0 <= ret: results.append([projPath[len(spacePath) + 1:], branch, 1 == ret])
     else:
-        ep = ExtendPush(g_repo_path, isForce, results)
+        ep = ExtendPush(spacePath, isForce, results)
         ep.doActionWithManifest(True)
     printPushResults(results)
 
 
-def doUpdateManifest(baseBranch, newBranch):
+def doUpdateManifest(spacePath, baseBranch, newBranch):
     '''
     <default revision="main" remote="origin" sync-j="4"/>
     '''
-    path = g_repo_path + '/.repo/manifests'
+    path = spacePath + '/.wing/manifests'
     try:
         for root, dirs, files in os.walk(path):
             for f in files:
@@ -183,24 +182,24 @@ def doUpdateManifest(baseBranch, newBranch):
         assert 0
 
 
-def doCreateProject(baseBranch, newBranch, buildNo, project):
+def doCreateProject(spacePath, baseBranch, newBranch, buildNo, project):
     LoggerUtils.light(project + ' -> ' + newBranch)
-    git = BasicGit(g_repo_path, g_repo_path + os.sep + project)
+    git = BasicGit(spacePath + os.sep + project)
     git.fetchBranch(baseBranch, False)
     rbs = git.getRemoteBranches()
     if None == rbs or newBranch not in rbs:
         git.pushToRemoteBranch(newBranch)
     git.fetchBranch(newBranch, False)
-    cfg = g_repo_path + os.sep + project + '/branchCreator.py'
+    cfg = spacePath + os.sep + project + '/branchCreator.py'
     if not os.path.exists(cfg): return
-    ret = CmnUtils.doCmdCall('cd %s && python %s %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
+    ret = CmnUtils.doCmdCall('cd "%s" && python "%s" %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
     assert 0 == ret or '0' == ret, 'Error: Update version fail ' + project
 
 
-def doCreate(baseBranch, newBranch, buildNo):
-    repo = BasicRepoIn(g_repo_path)
-    # repo.println()
-    projects = repo.getManifestProjects()
+def doCreate(spacePath, baseBranch, newBranch, buildNo):
+    space = BasicSpace(spacePath)
+    # space.println()
+    projects = space.getManifestProjects()
 
     # do to projects
     for project in projects:
@@ -208,15 +207,15 @@ def doCreate(baseBranch, newBranch, buildNo):
         doCreateProject(baseBranch, newBranch, buildNo, project.getPath())
 
     # do to manifest
-    doCreateProject(baseBranch, newBranch, buildNo, '.repo/manifests')
+    doCreateProject(spacePath, baseBranch, newBranch, buildNo, '.wing/manifests')
     # update manifest
-    doUpdateManifest(baseBranch, newBranch)
-    # update repo config
-    repo.updateBranch(newBranch)
+    doUpdateManifest(spacePath, baseBranch, newBranch)
+    # update space config
+    space.updateBranch(newBranch)
 
 
-def doClean():
-    path = g_repo_path + '/out'
+def doClean(spacePath):
+    path = spacePath + '/out'
     if not os.path.isdir(path): return
     # clean cache results
     FileUtils.remove(path)
@@ -231,41 +230,41 @@ def doClean():
     #     os.remove(fileName)
 
 
-def doFlush(baseBranch, newBranch, buildNo):
-    path = g_repo_path + '/out'
+def doFlush(spacePath, baseBranch, newBranch, buildNo):
+    path = spacePath + '/out'
     FileUtils.ensureDir(path)
 
     with open(path + '/' + baseBranch + '_to_' + newBranch, 'w') as f: f.write('')
     with open(path + '/build-info.txt', 'w') as f: f.write(baseBranch + ',' + newBranch + ',' + buildNo)
 
 
-def createBranch(baseBranch, newBranch, buildNo):
+def createBranch(spacePath, baseBranch, newBranch, buildNo):
     LoggerUtils.light('Create branch: ' + baseBranch + ' -> ' + newBranch + ': ' + buildNo)
     doClean()
-    doCreate(baseBranch, newBranch, buildNo)
-    doFlush(baseBranch, newBranch, buildNo)
+    doCreate(spacePath, baseBranch, newBranch, buildNo)
+    doFlush(spacePath, baseBranch, newBranch, buildNo)
 
 
 def run():
     argv = BasicArgumentsValue()
-    projPath, envPath, cmd = argv.get(0), argv.get(1), argv.get(2)
+    envPath, spacePath, projPath, cmd = argv.get(0), argv.get(1), argv.get(2), argv.get(3)
 
     if '-branch' == cmd:
         results = []
-        eb = ExtendBranch(g_repo_path, results)
+        eb = ExtendBranch(spacePath, results)
         eb.doActionWithManifest(True)
         printResults(results, ' ≠ %s(remote)')
         return
     if '-push' == cmd:
-        pushGroupToRemote(projPath, envPath, 'f' == argv.get(3))
+        pushGroupToRemote(spacePath, envPath, projPath, 'f' == argv.get(3))
         return
     if '-newbranch' == cmd:
         buildNo = argv.get(5) if 5 < argv.count() else '0'
-        createBranch(argv.get(3), argv.get(4), buildNo)
+        createBranch(spacePath, argv.get(3), argv.get(4), buildNo)
         return
     if '-status' == cmd:
         results = []
-        eb = ExtendStatus(g_repo_path, results)
+        eb = ExtendStatus(spacePath, results)
         eb.doActionWithManifest(True)
         printResults(results, ' : %s')
         return

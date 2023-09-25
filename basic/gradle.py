@@ -16,7 +16,7 @@ from utils.utils_logger import LoggerUtils
 # --------------------------------------------------------------------------------------------------------------------------
 class BasicGradle:
     """
-        解析的标准的Android sutdio工程属性
+        parse Android studio project
     """
 
     def __init__(self, path):

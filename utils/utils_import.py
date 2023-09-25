@@ -24,19 +24,5 @@ class ImportUtils:
             _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
         except Exception as e:
             pass
-        g_env_path = os.getcwd()
-        g_this_file = os.path.realpath(sys.argv[0])
-        g_this_path = os.path.dirname(g_this_file)
-        return g_env_path, g_this_file, g_this_path
-
-    @staticmethod
-    def initPath(env_path):
-        repo_path = env_path
-        minGap = 1 if env_path.startswith(os.sep) else 4  # windows("C://")
-        while True:
-            if len(repo_path) <= minGap: assert 0
-            if os.path.exists(repo_path + '/.repo/repo'):
-                sys.path.append(repo_path + '/.repo/repo')
-                break
-            repo_path = os.path.dirname(repo_path)
-        return repo_path
+        wingPath = os.path.expanduser("~") + os.sep + '.wing/wing' #  such as: /Users/${username}/.wing/wing
+        return wingPath

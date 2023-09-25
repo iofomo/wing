@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# @brief: 各类文件的签名信息
-# @date:   2023.05.16 14:40:50
+# @brief: signature for target file
+# @date:  2023.05.16 14:40:50
 
-import sys, os, time, datetime
+import os
+import sys
 
 g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
@@ -17,8 +18,7 @@ from utils.utils_import import ImportUtils
 from utils.utils_zip import ZipUtils
 from basic.arguments import BasicArgumentsValue
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+g_wing_path = ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
@@ -47,11 +47,11 @@ def doList(envPath, f, pwd):
 
     if CmnUtils.isRelativePath(f): f = envPath + os.sep + f
     # print(f)
-    if f.endswith('.apk'):  # # "repo -key list com.demo.apk"
+    if f.endswith('.apk'):  # "wing -key list com.demo.apk"
         ret = CmnUtils.doCmd('keytool -list -printcert -jarfile ' + CmnUtils.formatCmdArg(f))
         LoggerUtils.println(ret)
         return
-    if f.endswith('.ipa'):  # # "repo -key list com.demo.ipa"
+    if f.endswith('.ipa'):  # "wing -key list com.demo.ipa"
         tempPath = envPath + "/.cache/" + FileUtils.getTempName()
         try:
             mpf = doExportMobileProvision(tempPath, f)
@@ -63,15 +63,15 @@ def doList(envPath, f, pwd):
         finally:
             FileUtils.remove(tempPath, True)
         return
-    if f.endswith('.mobileprovision'):  # # "repo -key list embedded.mobileprovision"
+    if f.endswith('.mobileprovision'):  # # "wing -key list embedded.mobileprovision"
         ret = CmnUtils.doCmd('security cms -D -i ' + CmnUtils.formatCmdArg(f))
         LoggerUtils.println(ret)
         return
-    if f.endswith('.RSA') or f.endswith('.rsa'):  # # "repo -key list cert.RSA"
+    if f.endswith('.RSA') or f.endswith('.rsa'):  # "wing -key list cert.RSA"
         ret = CmnUtils.doCmd('keytool -printcert -file ' + CmnUtils.formatCmdArg(f))
         LoggerUtils.println(ret)
         return
-    if f.endswith('.keystore') or f.endswith('.jks'):  # # "repo -key list demo.keystore"
+    if f.endswith('.keystore') or f.endswith('.jks'):  # "wing -key list demo.keystore"
         if CmnUtils.isEmpty(pwd):
             ret = CmnUtils.doCmd('keytool -list -v -keystore ' + CmnUtils.formatCmdArg(f))
         else:
@@ -112,18 +112,18 @@ def doHash(str):
 
 def run():
     '''
-    repo -key
+    wing -key
     '''
     argv = BasicArgumentsValue()
-    envPath, cmd = argv.get(0), argv.get(1)
+    envPath, spacePath, cmd = argv.get(0), argv.get(1), argv.get(2)
 
-    # "repo -key list ${file} ${pwd}"
-    if cmd == 'list': return doList(envPath, argv.get(2), argv.get(3))
-    # "repo -key create ${type} ${mode}"
-    if cmd == 'create': return doCreate(envPath, argv.get(2), argv.get(3))
-    # "repo -key hash ${string}"
-    if cmd == 'hash': return doHash(argv.get(2))
-    LoggerUtils.error('UNsupport command: ' + cmd)
+    # "wing -key list ${file} ${pwd}"
+    if cmd == 'list': return doList(envPath, argv.get(3), argv.get(4))
+    # "wing -key create ${type} ${mode}"
+    if cmd == 'create': return doCreate(envPath, argv.get(3), argv.get(4))
+    # "wing -key hash ${string}"
+    if cmd == 'hash': return doHash(argv.get(3))
+    LoggerUtils.error('Unsupported command: ' + cmd)
 
 
 if __name__ == "__main__":

@@ -16,9 +16,8 @@ from utils.utils_logger import LoggerUtils
 # --------------------------------------------------------------------------------------------------------------------------
 class BasicGit:
 
-    def __init__(self, repoPath, gitPath):
+    def __init__(self, gitPath):
         self.mGitPath = gitPath
-        sys.path.append(repoPath + '/python/')
 
     def getCurrentBranch(self):
         branches = self.__doGitCmd__('branch')

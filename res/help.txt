@@ -1,7 +1,7 @@
-    repo commands
+    wing commands
        init      first checkout code, like this: {project name} {branch name} {xml name}, such as:
-                    repo init xxx develop android.xml
-       sync [-f] [-i] update git code from repo manifest git, -f: force switch to repo branch, -i: ignore git sync fail
+                    wing init xxx develop android.xml
+       sync [-f] [-i] update git code from wing manifest git, -f: force switch to workspace branch, -i: ignore git sync fail
 
     extend commands: always start with '-', such as:
        -build [module] [d/r]
@@ -28,7 +28,7 @@
                  push current commit to remote
                  f: force push to remote, otherwise push for CodeReview(recommend)
        -switch [branch]
-                 switch repo group to target branch
+                 switch workspace to target branch
        -project
                 parse all git project info to out/project.json
        -key [list] [file] [pwd]
@@ -37,11 +37,11 @@
             [create] [rsa] [1024/2048]
                 1024/2048: key length, 2048 default
        -setprop [key] [value]
-               set repo property key with value
+               set wing property key with value
        -getprop [key]
-               get repo property key value
+               get wing property key value
        -listprop
-               print all repo property
+               print all wing property
 
     git commands: work on the current change (see also: git help everyday)
        add       Add file contents to the index

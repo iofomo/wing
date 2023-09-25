@@ -9,7 +9,7 @@ from utils.utils_cmn import CmnUtils
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-class RepoProjectAction:
+class WingProjectAction:
     def __init__(self, path):
         self.mRootPath = path
 
@@ -32,7 +32,7 @@ class RepoProjectAction:
         LoggerUtils.println('mRootPath: ' + self.mRootPath)
 
 
-class RepoProjectActionCopyFile(RepoProjectAction):
+class WingProjectActionCopyFile(WingProjectAction):
     """
     local file exist, then ignore
     <copyfile src="build.sh" dest="build.sh"/>
@@ -41,7 +41,7 @@ class RepoProjectActionCopyFile(RepoProjectAction):
     """
 
     def __init__(self, path):
-        RepoProjectAction.__init__(self, path)
+        WingProjectAction.__init__(self, path)
         self.src, self.dest, self.md5 = '', '', None
 
     def isValid(self):
@@ -82,13 +82,13 @@ class RepoProjectActionCopyFile(RepoProjectAction):
         LoggerUtils.light('export: ' + sf + ' -> ' + d)
 
     def println(self):
-        RepoProjectAction.println(self)
+        WingProjectAction.println(self)
         LoggerUtils.println('src: ' + self.src)
         LoggerUtils.println('dest: ' + self.dest)
         LoggerUtils.println('md5: ' + ('' if None == self.md5 else self.md5))
 
 
-class RepoProjectActionRemoveFile(RepoProjectAction):
+class WingProjectActionRemoveFile(WingProjectAction):
     """
     local file exist, then ignore
     <copyfile src="build.sh" dest="build.sh"/>
@@ -97,7 +97,7 @@ class RepoProjectActionRemoveFile(RepoProjectAction):
     """
 
     def __init__(self, path):
-        RepoProjectAction.__init__(self, path)
+        WingProjectAction.__init__(self, path)
         self.dest, self.md5 = '', None
 
     def isValid(self):
@@ -125,12 +125,12 @@ class RepoProjectActionRemoveFile(RepoProjectAction):
         LoggerUtils.light('remove: ' + d)
 
     def println(self):
-        RepoProjectAction.println(self)
+        WingProjectAction.println(self)
         LoggerUtils.println('dest: ' + self.dest)
         LoggerUtils.println('md5: ' + self.md5)
 
 
-class RepoProject:
+class WingProject:
     """
     <project path="build" name="xxx/build">
         <copyfile src="build.sh" dest="build.sh"/>

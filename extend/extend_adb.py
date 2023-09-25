@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# @brief: adb commands for repo projects
+# @brief: adb commands for workspace
 # @date:   2023.05.10 14:40:50
 
-import sys, os, time, threading
+import os
+import sys
+import time
 
 g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
@@ -16,8 +18,7 @@ from utils.utils_file import FileUtils
 from utils.utils_adb import AdbUtils
 from basic.arguments import BasicArgumentsValue
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+g_wing_path = ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
@@ -26,13 +27,13 @@ def doTopInfo():
 
 
 def doPullPackage(projPath, pkg):
-    if None == pkg:
+    if CmnUtils.isEmpty(pkg):
         LoggerUtils.error('Error: Invalid commands')
-        LoggerUtils.println('The command is: "repo -adb pull {package name}"')
+        LoggerUtils.println('The command is: "wing -adb pull {package name}"')
         return
 
     pkgFile = AdbUtils.getApkFile(pkg)
-    if None == pkgFile:
+    if CmnUtils.isEmpty(pkgFile):
         LoggerUtils.error('Error: ' + pkg + ' not found')
         return
     outFile = projPath + os.sep + pkg + '.apk'
@@ -68,7 +69,6 @@ def doDumpUi(path):
 
 
 def doDumpLogger(path):
-    # 日志信息
     LoggerUtils.println('dump log')
 
     def doDumpLoggerImpl(outFile):
@@ -81,13 +81,11 @@ def doDumpLogger(path):
 
 
 def doDumpRuntime(path):
-    # anr 信息
     LoggerUtils.println('dump anr')
     outFile = path + '/anr.txt'
     CmnUtils.doCmd2File('adb pull /data/anr', outFile)
     LoggerUtils.light('>>> ' + outFile)
 
-    # 进程信息
     LoggerUtils.println('dump ps')
     outFile = path + '/ps.txt'
     CmnUtils.doCmd2File('adb shell ps', path + '/ps.txt')
@@ -108,19 +106,15 @@ def doDumpSys(path):
 
 def doDumpEnv(path):
     os.makedirs(path)
-    # 网络信息
     LoggerUtils.println('dump net')
     CmnUtils.doCmd2File('adb shell netcfg', path + '/netcfg.txt')
 
-    # getprop
     LoggerUtils.println('dump property')
     CmnUtils.doCmd2File('adb shell getprop', path + '/property.txt')
 
-    # dumpsys service //查询AMS服务相关信息
     LoggerUtils.println('dump service')
     CmnUtils.doCmd2File('adb shell service list', path + '/service.txt')
 
-    # dumpsys app //查询应用情况
     LoggerUtils.println('dump app')
     CmnUtils.doCmd2File('adb shell pm list packages -e', path + '/app.txt')
 
@@ -142,7 +136,7 @@ def doDump(env_path, _mode):
         elif 'log' == _mode:
             doDumpLogger(outPath)
         else:
-            assert 0, 'UNsupport mode: ' + _mode
+            assert 0, 'Unsupported mode: ' + _mode
         LoggerUtils.println('>>> ' + outPath)
     except Exception as e:
         LoggerUtils.println(e)
@@ -150,17 +144,20 @@ def doDump(env_path, _mode):
 
 def run():
     """
-    repo -adb top
-    repo -adb pull {package name}
+    wing -adb top
+    wing -adb pull {package name}
+    wing -adb stop {package name}
+    wing -adb clear {package name}
+    wing -dump
     """
     za = BasicArgumentsValue()
-    envPath, typ = za.get(0), za.get(1)
+    envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)
     if typ == 'top': return doTopInfo()
-    if typ == 'pull': return doPullPackage(envPath, za.get(2))
-    if typ == 'stop': return doStopApp(envPath, za.get(2))
-    if typ == 'clear': return doClearApp(envPath, za.get(2))
-    if typ == 'dump': return doDump(envPath, za.get(2))
-    assert 0, 'UNsupport type: ' + typ
+    if typ == 'pull': return doPullPackage(envPath, za.get(3))
+    if typ == 'stop': return doStopApp(envPath, za.get(3))
+    if typ == 'clear': return doClearApp(envPath, za.get(3))
+    if typ == 'dump': return doDump(envPath, za.get(3))
+    assert 0, 'Unsupported type: ' + typ
 
 
 if __name__ == "__main__":

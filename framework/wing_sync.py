@@ -10,20 +10,20 @@ sys.path.append(os.path.dirname(g_this_path))
 
 from utils.utils_cmn import CmnUtils
 from utils.utils_logger import LoggerUtils
-from manager.repo_env import RepoEnv
-from manager.repo_git import RepoGit
-from manager.repo_manifest import ManifestHandler
+from framework.wing_env import WingEnv
+from framework.wing_git import WingGit
+from framework.wing_manifest import ManifestHandler
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 def doRefresh():
     LoggerUtils.println('do refresh ...')
-    cmd = 'cd %s/.repo/repo && python manager/repo_extend.py %s %s %s' % (RepoEnv.getRootPath(), RepoEnv.getRootPath(), os.getcwd(), '-refresh')
+    cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" "%s"' % (WingEnv.getWingPath(), WingEnv.getSpacePath(), WingEnv.getEnvPath(), '-refresh')
     ret = CmnUtils.doCmdCall(cmd)
     assert 0 == ret or '0' == ret, 'Error: refresh fail'
 
 
-class RepoSync:
+class WingSync:
 
     @staticmethod
     def parseBranchIndex(indexXml):
@@ -43,64 +43,64 @@ class RepoSync:
     @staticmethod
     def do_sync_project(force, ignoreFail, project, group):
         LoggerUtils.light(project.getPath())
-        exist = RepoGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
+        exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = force if exist else True
         remoteBranch = project.getRevision()
         if CmnUtils.isEmpty(remoteBranch): remoteBranch = group.getRevision()
         assert not CmnUtils.isEmpty(remoteBranch), 'Empty remote branch'
-        currBranch = RepoGit.getCurrentBranch(project.getPath())
+        currBranch = WingGit.getCurrentBranch(project.getPath())
         switch = projForce or len(currBranch) <= 0 or currBranch == remoteBranch
         if not switch: remoteBranch = currBranch
         # LoggerUtils.println(remoteBranch + " =?= " + currBranch)
-        if not RepoGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, not exist): return
+        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, not exist): return
         if switch: project.doActions(projForce)
 
     @staticmethod
     def do_switch_project(ignoreFail, project, group):
         LoggerUtils.light(project.getPath())
-        exist = RepoGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
+        exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = not exist
         remoteBranch = project.getRevision()
         if CmnUtils.isEmpty(remoteBranch): remoteBranch = group.getRevision()
         assert not CmnUtils.isEmpty(remoteBranch), 'Empty remote branch'
-        if not RepoGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, projForce): return
+        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, projForce): return
         project.doActions(projForce)
 
     @staticmethod
     def doSync(force, ignoreFail, isSwitch=False):
         # update manifests
-        RepoGit.updateCurrentBranch('.repo/manifests', RepoEnv.getRepoBranch())
+        WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
 
-        indexXml = RepoEnv.getRootPath() + os.sep + '.repo' + os.sep + 'manifest.xml'
-        xml = RepoSync.parseBranchIndex(indexXml)
-        realXml = RepoEnv.getRootPath() + os.sep + '.repo' + os.sep + 'manifests' + os.sep + xml
-        mh = ManifestHandler.parseXml(RepoEnv.getRootPath(), realXml)
+        indexXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifest.xml'
+        xml = WingSync.parseBranchIndex(indexXml)
+        realXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifests' + os.sep + xml
+        mh = ManifestHandler.parseXml(WingEnv.getSpacePath(), realXml)
 
         group = mh.getGroup()
         projects = mh.getProjects()
         for project in projects:
             if isSwitch:
-                RepoSync.do_switch_project(ignoreFail, project, group)
+                WingSync.do_switch_project(ignoreFail, project, group)
             else:
-                RepoSync.do_sync_project(force, ignoreFail, project, group)
-        CmnUtils.doCmd('chmod a+x %s/* ' % RepoEnv.getRootPath())
+                WingSync.do_sync_project(force, ignoreFail, project, group)
+        CmnUtils.doCmd('chmod a+x %s/* ' % WingEnv.getSpacePath())
         doRefresh()
 
     @staticmethod
     def doSyncProject(force, ignoreFail, projectPath):
         # update manifests
-        RepoGit.updateCurrentBranch('.repo/manifests', RepoEnv.getRepoBranch())
+        WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
 
-        indexXml = RepoEnv.getRootPath() + os.sep + '.repo' + os.sep + 'manifest.xml'
-        xml = RepoSync.parseBranchIndex(indexXml)
-        realXml = RepoEnv.getRootPath() + os.sep + '.repo' + os.sep + 'manifests' + os.sep + xml
-        mh = ManifestHandler.parseXml(RepoEnv.getRootPath(), realXml)
+        indexXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifest.xml'
+        xml = WingSync.parseBranchIndex(indexXml)
+        realXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifests' + os.sep + xml
+        mh = ManifestHandler.parseXml(WingEnv.getSpacePath(), realXml)
 
         group = mh.getGroup()
         projects = mh.getProjects()
         for project in projects:
             if project.getPath() != projectPath: continue
-            RepoSync.do_sync_project(force, ignoreFail, project, group)
+            WingSync.do_sync_project(force, ignoreFail, project, group)
             break
         else:
             LoggerUtils.error('Not found project: ' + projectPath)
@@ -119,12 +119,15 @@ def run():
                 projectPath = arg
 
     if None == projectPath:
-        return RepoSync.doSync(forceSwitch, ignoreFail)
+        return WingSync.doSync(forceSwitch, ignoreFail)
 
     projectPath = projectPath.strip('/')
-    return RepoSync.doSyncProject(forceSwitch, ignoreFail, projectPath)
+    return WingSync.doSyncProject(forceSwitch, ignoreFail, projectPath)
 
 
 if __name__ == "__main__":
-    RepoEnv.init(sys.argv[1])
+    """
+    python wing_sync.py {space_path} {env_path} [arguments]
+    """
+    WingEnv.init(sys.argv[1], sys.argv[2])
     run()

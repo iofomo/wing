@@ -3,8 +3,8 @@
 # @date:   2023.05.10 14:40:50
 
 from xml import sax
-from manager.repo_group import RepoGroup
-from manager.repo_project import *
+from framework.wing_group import WingGroup
+from framework.wing_project import *
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ class ManifestHandler(sax.ContentHandler):
     def __init__(self, path):
         self.mRootPath = path
         self.tag = ""
-        self.group = RepoGroup()
+        self.group = WingGroup()
         self.depend = None
         self.project = None
         self.projects = []
@@ -57,26 +57,26 @@ class ManifestHandler(sax.ContentHandler):
             self.group.setRemote(attributes["remote"])
             self.group.setSyncJ(attributes["sync-j"])
         elif tag == "project":
-            self.project = RepoProject()
+            self.project = WingProject()
             self.project.setPath(attributes["path"])
             self.project.setName(attributes["name"])
             if "revision" in attributes: self.project.setRevision(attributes["revision"])
             self.projects.append(self.project)
         elif tag == "copyfile":
-            action = RepoProjectActionCopyFile(self.mRootPath)
+            action = WingProjectActionCopyFile(self.mRootPath)
             action.setSrc(attributes["src"])
             action.setDest(attributes["dest"])
             if 'md5' in attributes: action.setMD5(attributes["md5"])
             assert action.isValid(), 'Invalid action: copyfile'
             self.project.addAction(action)
         elif tag == "removefile":
-            action = RepoProjectActionRemoveFile(self.mRootPath)
+            action = WingProjectActionRemoveFile(self.mRootPath)
             action.setDest(attributes["dest"])
             if 'md5' in attributes: action.setMD5(attributes["md5"])
             assert action.isValid(), 'Invalid action: removefile'
             self.project.addAction(action)
         elif tag == "depend":
-            if None == self.depend: self.depend = RepoGroup()
+            if None == self.depend: self.depend = WingGroup()
             self.depend.setPlatform(attributes["platform"])
             self.depend.setRevision(attributes["revision"])
 

@@ -12,28 +12,26 @@ from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
-from manager.repo_env import RepoEnv
-from manager.repo_config import RepoConfig
+from framework.wing_env import WingEnv
+from framework.wing_git import WingGit
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+ImportUtils.initEnv()
 
 
 # ------------------------------------------------------------------------------------------------------------------------
-class RepoGit:
+class WingGit:
     @staticmethod
     def getGitProjects():
         projects = []
         lastPath = ''
-        l = len(RepoEnv.getRootPath())
-        for root, dirs, files in os.walk(RepoEnv.getRootPath()):
+        l = len(WingEnv.getSpacePath())
+        for root, dirs, files in os.walk(WingEnv.getSpacePath()):
             for dir in dirs:
                 sub = os.path.join(root, dir)
                 if 0 < len(lastPath) and sub.startswith(lastPath): continue
                 if not os.path.isdir(sub + os.path.sep + '.git'): continue
                 lastPath = sub + os.path.sep
                 ends = sub[l + 1:]
-                if ends == '.repo/repo': continue
                 projects.append(ends)
         return projects
 
@@ -54,15 +52,15 @@ class RepoGit:
 
     @staticmethod
     def exeCmdToGits(cmd):
-        projects = RepoGit.getGitProjects()
+        projects = WingGit.getGitProjects()
         for project in projects:
             try:
-                ret = RepoGit.exeCmdToGit(project, cmd)
+                ret = WingGit.exeCmdToGit(project, cmd)
                 if 0 <= ret.find('error'):
                     LoggerUtils.e(project + ' : Failed')
                     continue
                 if 'status' == cmd:
-                    RepoGit.exeCmdToGitsByStatus(project, ret)
+                    WingGit.exeCmdToGitsByStatus(project, ret)
                     continue
                 LoggerUtils.println(ret)
             except Exception as e:
@@ -72,7 +70,7 @@ class RepoGit:
 
     @staticmethod
     def exeCmdToGit(project, cmd):
-        path = RepoEnv.getRootPath() + os.path.sep + project
+        path = WingEnv.getSpacePath() + os.path.sep + project
         ret = CmnUtils.doCmd('cd %s && git %s' % (path, cmd))
         # LoggerUtils.println(ret)
         if 0 <= ret.find('error'): LoggerUtils.error(ret)
@@ -89,7 +87,7 @@ class RepoGit:
 
     @staticmethod
     def isAboveV2(path):
-        v = RepoGit.gitVersion(path)
+        v = WingGit.gitVersion(path)
         if None != v:
             vv = v.split('.')
             return 2 <= int(vv[0])
@@ -97,8 +95,8 @@ class RepoGit:
 
     @staticmethod
     def gitSetUpstream(project, branch):
-        path = RepoEnv.getRootPath() + os.path.sep + project
-        # if not RepoGit.isAboveV2(path): return
+        path = WingEnv.getSpacePath() + os.path.sep + project
+        # if not WingGit.isAboveV2(path): return
         ret = CmnUtils.doCmd('cd %s && git branch -vv' % (path))
         if None != ret:
             lines = ret.split('\n')
@@ -106,19 +104,19 @@ class RepoGit:
                 line = line.strip()
                 if not line.startswith('*'): continue
                 if 0 < line.find('[origin/'): return  # has set
-        RepoGit.bindBranchToRemote(project, branch)
+        WingGit.bindBranchToRemote(project, branch)
 
     @staticmethod
     def checkBranch(project, branch):
-        return branch == RepoGit.getCurrentBranch(project)
+        return branch == WingGit.getCurrentBranch(project)
 
     @staticmethod
     def bindBranchToRemote(project, branch):
-        RepoGit.exeCmdToGit(project, 'branch --set-upstream-to=origin/%s %s' % (branch, branch))
+        WingGit.exeCmdToGit(project, 'branch --set-upstream-to=origin/%s %s' % (branch, branch))
 
     @staticmethod
     def getCurrentBranch(project):
-        branches = RepoGit.exeCmdToGit(project, 'branch')
+        branches = WingGit.exeCmdToGit(project, 'branch')
         if CmnUtils.isEmpty(branches): return ''
         bb = branches.split('\n')
         for b in bb:
@@ -133,7 +131,7 @@ class RepoGit:
 
     @staticmethod
     def hasBranch(project, branch):
-        branches = RepoGit.exeCmdToGit(project, 'branch')
+        branches = WingGit.exeCmdToGit(project, 'branch')
         if CmnUtils.isEmpty(branches): return False
         bb = branches.split('\n')
         for b in bb:
@@ -145,53 +143,53 @@ class RepoGit:
     @staticmethod
     def fetchBranch(project, branch, force, ignoreFail, clean=False):
         if branch.startswith("refs/tags/"):  # fetch tag, "refs/tags/tag-3.6.3"
-            return RepoGit.fetchTag(project, branch[10:], force, ignoreFail, clean)
+            return WingGit.fetchTag(project, branch[10:], force, ignoreFail, clean)
 
         # LoggerUtils.println(project, branch, force, ignoreFail, clean)
-        if not RepoGit.hasBranch(project, branch):
-            ret = RepoGit.exeCmdToGit(project, 'fetch origin %s:%s' % (branch, branch))
+        if not WingGit.hasBranch(project, branch):
+            ret = WingGit.exeCmdToGit(project, 'fetch origin %s:%s' % (branch, branch))
             LoggerUtils.println(ret)
-            if not RepoGit.hasBranch(project, branch):
+            if not WingGit.hasBranch(project, branch):
                 assert 0, 'Error: not found remote branch: ' + branch + ' for ' + project
 
         if force:
-            ret = RepoGit.exeCmdToGit(project, 'clean -x -f -d')
+            ret = WingGit.exeCmdToGit(project, 'clean -x -f -d')
             LoggerUtils.println(ret)
 
         frc = ' -f' if force else ''
-        if RepoGit.hasBranch(project, branch):
-            ret = RepoGit.exeCmdToGit(project, 'checkout%s %s' % (frc, branch))
+        if WingGit.hasBranch(project, branch):
+            ret = WingGit.exeCmdToGit(project, 'checkout%s %s' % (frc, branch))
         else:
-            ret = RepoGit.exeCmdToGit(project, 'checkout%s -b %s origin/%s' % (frc, branch, branch))
+            ret = WingGit.exeCmdToGit(project, 'checkout%s -b %s origin/%s' % (frc, branch, branch))
         LoggerUtils.println(ret)
 
-        currBranch = RepoGit.getCurrentBranch(project)
+        currBranch = WingGit.getCurrentBranch(project)
         if currBranch != branch:
             if ignoreFail: return False
-            if clean: CmnUtils.remove(RepoEnv.getRootPath() + os.path.sep + project)
+            if clean: CmnUtils.remove(WingEnv.getSpacePath() + os.path.sep + project)
             assert 0, 'Error: ' + currBranch + ' != ' + branch + ' for ' + project
 
-        RepoGit.gitSetUpstream(project, currBranch)
+        WingGit.gitSetUpstream(project, currBranch)
 
-        ret = RepoGit.exeCmdToGit(project, 'pull origin %s' % (branch))
-        return RepoGit.checkResult(ret)
+        ret = WingGit.exeCmdToGit(project, 'pull origin %s' % (branch))
+        return WingGit.checkResult(ret)
 
     @staticmethod
     def fetchTag(project, tag, force, ignoreFail, clean=False):
         # LoggerUtils.println(project, branch, force, ignoreFail, clean)
-        if RepoGit.getCurrentBranch(project) == tag: return True
+        if WingGit.getCurrentBranch(project) == tag: return True
 
-        ret = RepoGit.exeCmdToGit(project, 'fetch origin %s' % (tag))
+        ret = WingGit.exeCmdToGit(project, 'fetch origin %s' % (tag))
         LoggerUtils.println(ret)
         if None != ret and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
             assert 0, 'Error: fetch tag fail, ' + tag + ' for ' + project
 
-        ret = RepoGit.exeCmdToGit(project, 'checkout %s' % (tag))
+        ret = WingGit.exeCmdToGit(project, 'checkout %s' % (tag))
         LoggerUtils.println(ret)
         if None != ret and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
             assert 0, 'Error: checkout tag fail 1, ' + tag + ' for ' + project
 
-        if RepoGit.getCurrentBranch(project) != tag:
+        if WingGit.getCurrentBranch(project) != tag:
             assert 0, 'Error: checkout tag fail 2, ' + tag + ' for ' + project
         return True
 
@@ -210,16 +208,16 @@ class RepoGit:
 
     @staticmethod
     def updateCurrentBranch(project, dftBranch):
-        branch = RepoGit.getCurrentBranch(project)
+        branch = WingGit.getCurrentBranch(project)
         if CmnUtils.isEmpty(branch): branch = dftBranch
-        RepoGit.exeCmdToGit(project, 'pull origin ' + branch)
+        WingGit.exeCmdToGit(project, 'pull origin ' + branch)
 
     @staticmethod
     def fetchGit(projectLocal, projectServer):
-        localPath = RepoEnv.getRootPath() + os.sep + projectLocal
+        localPath = WingEnv.getSpacePath() + os.sep + projectLocal
         projExist = os.path.isdir(localPath)
         if projExist:
-            rname = RepoGit.getGitRemoteServerName(localPath)
+            rname = WingGit.getGitRemoteServerName(localPath)
             if rname == None or rname == projectServer: return projExist
             msg = 'file exist: ' + localPath
             msg += ', remote git changed: %s -> %s' % (rname, projectServer)
@@ -228,10 +226,10 @@ class RepoGit:
 
         sname = projectServer.split('/')[-1]
         if sname.endswith('.git'): sname = sname[:-4]
-        tmpPath = RepoEnv.getRootPath() + os.sep + '.repo' + os.sep + FileUtils.getTempName('.tmp_')
+        tmpPath = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + FileUtils.getTempName('.tmp_')
         try:
             os.makedirs(tmpPath)
-            CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, RepoConfig.getGitRemoteHost(), projectServer))
+            CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
             assert os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'), 'Make sure have correct access rights for ' + projectServer + ' !'
 
             pp = os.path.dirname(localPath)
@@ -262,5 +260,8 @@ class RepoGit:
 
 
 if __name__ == "__main__":
-    RepoEnv.init(sys.argv[1])
-    RepoGit.exeCmdToGits(CmnUtils.joinArgs(sys.argv[2:]))
+    """
+    python wing_git.py {space_path} {env_path} [arguments]
+    """
+    WingEnv.init(sys.argv[1], sys.argv[2])
+    WingGit.exeCmdToGits(CmnUtils.joinArgs(sys.argv[3:]))

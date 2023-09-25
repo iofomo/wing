@@ -5,6 +5,7 @@
 
 import sys, os, time
 from datetime import datetime, timedelta
+
 g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
 sys.path.append(os.path.dirname(g_this_path))
@@ -14,28 +15,30 @@ from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_properties import PropertiesUtils
 from utils.utils_import import ImportUtils
-from basic.repoin import BasicRepoIn
+from basic.space import BasicSpace
 from basic.xmlreader import BasicXmlReader
 from basic.resource import Resource
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+g_wing_path = ImportUtils.initEnv()
+
+
 # --------------------------------------------------------------------------------------------------------------------------
 class DocumentCollector:
-    def __init__(self, usr):
+    def __init__(self, spacePath, usr):
+        self.mSpacePath = spacePath
         self.usr = usr
         self.today, self.lastday = None, None
         self.cacher = []
 
     def doCollect(self):
-        fsrc = open(g_repo_path + '/doc.md', 'wb')
+        fsrc = open(self.mSpacePath + '/doc.md', 'wb')
         self.__doCollectDoc__(fsrc)
         self.__doCollectPlatformDoc__(fsrc)
         self.__doCollectModuleDoc__(fsrc)
         fsrc.close()
 
     def __doCollectDoc__(self, fsrc):
-        path = g_repo_path + '/doc'
+        path = self.mSpacePath + '/doc'
         if not os.path.isdir(path): return
         LoggerUtils.light('refresh: doc ...')
 
@@ -48,12 +51,17 @@ class DocumentCollector:
         self.__doCollectPath__(path)
         self.cacheFlush(fsrc, Resource.getString(0) + '\n\n')
 
-    def __do_write__(self, f, l): f.write(l.encode())
+    def __do_write__(self, f, l):
+        f.write(l.encode())
 
-    def cacheReset(self): self.cacher = []
-    def cacheAppend(self, line): self.cacher.append(line)
+    def cacheReset(self):
+        self.cacher = []
+
+    def cacheAppend(self, line):
+        self.cacher.append(line)
+
     def cacheFlush(self, fsrc, tag1=None, tag2=None, tag3=None):
-        if len(self.cacher) <= 0: return # empty
+        if len(self.cacher) <= 0: return  # empty
         if tag1 != None: self.__do_write__(fsrc, tag1)
         if tag2 != None: self.__do_write__(fsrc, tag2)
         if tag3 != None: self.__do_write__(fsrc, tag3)
@@ -61,7 +69,7 @@ class DocumentCollector:
         self.cacheReset()
 
     def __doCollectPlatformDoc__(self, fsrc):
-        path = g_repo_path + '/platform/doc'
+        path = self.mSpacePath + '/platform/doc'
         if not os.path.isdir(path): return
         LoggerUtils.light('refresh: platform/doc ...')
 
@@ -77,7 +85,7 @@ class DocumentCollector:
     def checkExt(self, f):
         ext = FileUtils.getFileExt(f)
         if ext == '.md': return 100 < os.path.getsize(f)
-        if ext not in ['.pdf','.doc','.docx']: return False
+        if ext not in ['.pdf', '.doc', '.docx']: return False
         return not os.path.isfile(f[:-len(ext)] + '.md')
 
     def __doCollectPath__(self, path):
@@ -87,7 +95,7 @@ class DocumentCollector:
                 filename = os.path.join(root, f)
                 if os.path.basename(os.path.dirname(filename)).endswith('.assets'): continue
                 if not self.checkExt(filename): continue
-                self.__doCollectItem__(path, filename[len(path)+1:])
+                self.__doCollectItem__(path, filename[len(path) + 1:])
 
     def __doCollectModuleDoc__(self, fsrc):
         LoggerUtils.light('refresh: module/doc ...')
@@ -99,8 +107,9 @@ class DocumentCollector:
         >   [开发设计文档](demo/开发设计.pdf)
         >   最近更新： xxx（2023-05-27 18:36:39）
         '''
+
         def scanPath(path, level, dirs):
-            #获取该目录下所有的文件名称和目录名称
+            # 获取该目录下所有的文件名称和目录名称
             ll = os.listdir(path)
             for l in ll:
                 if l.startswith('.'): continue
@@ -113,11 +122,11 @@ class DocumentCollector:
                 scanPath(d, level + 1, dirs)
 
         dirs = []
-        scanPath(g_repo_path, 1, dirs)
+        scanPath(self.mSpacePath, 1, dirs)
         lastPath = ''
         for dir in dirs:
-            path = dir[len(g_repo_path)+1:]
-            if path in ['doc','platform/doc','platform\\doc']: continue
+            path = dir[len(self.mSpacePath) + 1:]
+            if path in ['doc', 'platform/doc', 'platform\\doc']: continue
             if path.startswith('platform/template'): continue
             pos = path.find('/')
             if pos < 0: pos = path.find('\\')
@@ -128,7 +137,7 @@ class DocumentCollector:
             if lastPath != pname:
                 lastPath = pname
                 fsrc.write(('### ' + pname + '\n').encode())
-            self.cacheFlush(fsrc, '-   #### ' + os.path.dirname(path[pos+1:]) + '\n')
+            self.cacheFlush(fsrc, '-   #### ' + os.path.dirname(path[pos + 1:]) + '\n')
 
     def isNewest(self, ss):
         s = '%s' % ss
@@ -161,7 +170,7 @@ class DocumentCollector:
                     if 0 < pos: author = author[:pos].strip()
                 elif item.startswith('Date:'):
                     tmp = item[len('Date:'):].strip().split(' ')[:5]
-                    date = datetime.strptime(' '.join(tmp),'%a %b %d %H:%M:%S %Y')
+                    date = datetime.strptime(' '.join(tmp), '%a %b %d %H:%M:%S %Y')
         self.__doWriteItem__(fpath + os.sep + fname, author, date)
 
     def __doWriteItem__(self, fname, author, date):
@@ -184,18 +193,20 @@ class DocumentCollector:
         >   [开发设计文档](demo/开发设计.pdf) 
         >   最近更新：xxx <xxx>（2023-05-27 18:36:39）
         '''
-        self.cacheAppend('>   [%s](%s)\n' % (title.strip(), fname[len(g_repo_path)+1:]))
+        self.cacheAppend('>   [%s](%s)\n' % (title.strip(), fname[len(self.mSpacePath) + 1:]))
         if self.isNewest(date):
             self.cacheAppend((Resource.getString(3) + '\n') % (author, date))
         else:
             self.cacheAppend((Resource.getString(4) + '\n') % (author, date))
         self.cacheAppend('\n')
 
-def doRefreshPermit():
+
+def doRefreshPermit(spacePath):
     # add x right to the file
     LoggerUtils.light('refresh: *.sh, gradlew rights ...')
+
     def scanPath(path, level):
-        #获取该目录下所有的文件名称和目录名称
+        # 获取该目录下所有的文件名称和目录名称
         ll = os.listdir(path)
         for l in ll:
             if l.startswith('.'): continue
@@ -207,19 +218,21 @@ def doRefreshPermit():
                 CmnUtils.doCmd('chmod a+x ' + d)
                 continue
 
-    scanPath(g_repo_path, 1)
+    scanPath(spacePath, 1)
 
-def doRefreshGradle():
-    gf = g_repo_path + '/default.gradle'
+
+def doRefreshGradle(spacePath):
+    gf = spacePath + '/default.gradle'
     if not os.path.isfile(gf): return
 
     LoggerUtils.light('refresh: default.gradle ...')
-    mvnusr = PropertiesUtils.get(g_repo_path + '/.repo/repo.properties', 'mvnusr')
-    mvnpwd = PropertiesUtils.get(g_repo_path + '/.repo/repo.properties', 'mvnpwd')
+    mvnusr = PropertiesUtils.get(g_wing_path + '/.wing/wing.properties', 'mvnusr')
+    mvnpwd = PropertiesUtils.get(g_wing_path + '/.wing/wing.properties', 'mvnpwd')
     if CmnUtils.isEmpty(mvnusr) or CmnUtils.isEmpty(mvnpwd):
         LoggerUtils.w('No mvn account found !')
         return
-    with open(gf, 'r') as f: lines = f.readlines()
+    with open(gf, 'r') as f:
+        lines = f.readlines()
 
     updated = False
     newLines = []
@@ -237,19 +250,25 @@ def doRefreshGradle():
             continue
         newLines.append(line)
     if not updated: return
-    with open(gf, 'w') as f: f.writelines(newLines)
+    with open(gf, 'w') as f:
+        f.writelines(newLines)
+
 
 def isValidCMakelists(makeFile):
-    with open(makeFile, 'r') as f: lines = f.readlines()
+    with open(makeFile, 'r') as f:
+        lines = f.readlines()
     for line in lines:
-        line = line.strip()#project(ifma_
+        line = line.strip()  # project(ifma_
         # if line.startswith('project') and line.find('ifma_') < 0: return False
         if line.startswith('add_subdirectory'): return False
         if line.startswith('include_directories'): return True
     return False
 
+
 CMAKELIST_LEVEL_MAX = 6
-def doScanCMakeLists(path, ignoreDirs, outFiles, level=0):
+
+
+def doScanCMakeLists(spacePath, path, ignoreDirs, outFiles, level=0):
     level += 1
     for fname in os.listdir(path):
         f = os.path.join(path, fname)
@@ -260,28 +279,30 @@ def doScanCMakeLists(path, ignoreDirs, outFiles, level=0):
             continue
         if fname != 'CMakeLists.txt': continue
         if not isValidCMakelists(f): continue
-        fname = os.path.dirname(f)[len(g_repo_path)+1:]
+        fname = os.path.dirname(f)[len(spacePath) + 1:]
         if CmnUtils.isEmpty(fname): continue
         outFiles.append(fname)
 
-def doFixCMakelist(mf):
-    mlFile = g_repo_path + '/CMakeLists.txt'
+
+def doFixCMakelist(spacePath, mf):
+    mlFile = spacePath + '/CMakeLists.txt'
     if not os.path.exists(mlFile): return
     cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
     cplatform = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "platform")
     if CmnUtils.isEmpty(cname) or CmnUtils.isEmpty(cplatform): return
     LoggerUtils.light('refresh: CMakeLists.txt ' + cname)
 
-    if 'android' != cplatform: return # only for Android
-    if 'ANDROID_HOME' not in os.environ: return # make sure env right
+    if 'android' != cplatform: return  # only for Android
+    if 'ANDROID_HOME' not in os.environ: return  # make sure env right
 
     # load
-    with open(mlFile, 'r') as f: lines = f.readlines()
+    with open(mlFile, 'r') as f:
+        lines = f.readlines()
     # search include_directories
     for line in lines:
         line = line.strip()
-        if line.startswith('include_directories'): return # has fixed
-        if line.startswith('project(') and line.find('ifma') < 0: return # local not for Android
+        if line.startswith('include_directories'): return  # has fixed
+        if line.startswith('project(') and line.find('ifma') < 0: return  # local not for Android
 
     # fix
     needFixed = True
@@ -297,7 +318,8 @@ def doFixCMakelist(mf):
                 f.writelines('include_directories(%s/ndk/21.4.7075529/sources/android/support/include)\n' % sdkPath)
                 needFixed = False
 
-def doRefreshCMakelist(mf):
+
+def doRefreshCMakelist(spacePath, mf):
     cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
     if CmnUtils.isEmpty(cname): return
     LoggerUtils.light('refresh: CMakeLists.txt ' + cname)
@@ -306,10 +328,10 @@ def doRefreshCMakelist(mf):
 
     # scan
     outFiles = []
-    doScanCMakeLists(g_repo_path, ['build','lib','libs','src','inc','main'], outFiles)
+    doScanCMakeLists(spacePath, ['build', 'lib', 'libs', 'src', 'inc', 'main'], outFiles)
 
     # update root CMakeLists.txt
-    with open(g_repo_path + '/CMakeLists.txt', 'w') as f:
+    with open(spacePath + '/CMakeLists.txt', 'w') as f:
         f.write('cmake_minimum_required(VERSION 3.6.0)\n')
         f.write('project(%s)\n\n' % (cname))
 
@@ -339,18 +361,21 @@ def doRefreshCMakelist(mf):
             LoggerUtils.println('add: ' + outFile)
             f.writelines('add_subdirectory(%s)\n' % outFile)
 
-def run():
-    '''
-    repo -refresh
-    '''
-    repo = BasicRepoIn(g_repo_path)
-    repo.println()
 
-    doRefreshPermit()
-    doRefreshGradle()
-    doFixCMakelist(repo.getManifestFile())
-    # doRefreshCMakelist(repo.getManifestFile())
-    DocumentCollector(repo.getName()).doCollect()
+def run():
+    """
+    wing -refresh
+    """
+    spacePath, envPath = sys.argv[1], sys.argv[2]
+    space = BasicSpace(spacePath)
+    space.println()
+
+    doRefreshPermit(spacePath)
+    doRefreshGradle(spacePath)
+    doFixCMakelist(spacePath, space.getManifestFile())
+    # doRefreshCMakelist(spacePath, space.getManifestFile())
+    DocumentCollector(spacePath, space.getName()).doCollect()
+
 
 if __name__ == "__main__":
     run()

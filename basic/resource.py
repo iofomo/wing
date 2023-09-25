@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# @brief:  加载资源文本文件
+# @brief:  load resource
 # @date:   2023.05.10 14:40:50
 
 import os
@@ -21,7 +21,7 @@ class Resource:
     def __do_init__(cls):
         cls.sRes = {}
         path = os.path.dirname(g_this_path)
-        f = path + os.sep + 'res-' + CmnUtils.getLanguageName() + '.txt'
+        f = path + 'res/res-' + CmnUtils.getLanguageName() + '.txt'
         with open(f, 'rb') as f:
             while True:
                 line = f.readline().decode()

@@ -1,0 +1,16 @@
+{
+  "space": {
+    "github": {
+      "manifest": "manifest.git",
+      "host": "git@github.com:iofomo"
+    },
+    "gitee": {
+      "manifest": "manifest.git",
+      "host": "git@gitee.com:iofomo"
+    },
+    "gitlab": {
+      "manifest": "manifest.git",
+      "host": "git@gitlab.com:iofomo"
+    }
+  }
+}

@@ -14,15 +14,15 @@ from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from basic.git import BasicGit
+from basic.arguments import BasicArgumentsValue
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
 class ExtendClean:
-    def __init__(self, repoPath, envPath):
-        self.mRepoPath, self.mEnvPath = repoPath, envPath
+    def __init__(self, spacePath, envPath):
+        self.mSpacePath, self.mEnvPath = spacePath, envPath
         self.mProjPath = self.__getProjectPath__(envPath)
 
     def __getProjectPath__(self, path):
@@ -34,7 +34,7 @@ class ExtendClean:
 
     def __getAllGits__(self):
         projects = []
-        self.findSubs(self.mRepoPath, projects, '/.git/config')
+        self.findSubs(self.mSpacePath, projects, '/.git/config')
         return projects
 
     def findSubs(self, root, projects, sub, level=0):
@@ -45,17 +45,17 @@ class ExtendClean:
         for d in dd:
             path = root + os.sep + d
             if os.path.exists(path + sub):
-                projects.append(path[len(self.mRepoPath) + 1:])
+                projects.append(path[len(self.mSpacePath) + 1:])
                 continue
             self.findSubs(path, projects, sub, level + 1)
 
     def __getAllGradles__(self):
         projects = []
-        self.findSubs(self.mRepoPath, projects, '/build.gradle')
+        self.findSubs(self.mSpacePath, projects, '/build.gradle')
         return projects
 
     def doClean(self, typ):
-        if None == self.mProjPath or os.path.normcase(self.mRepoPath) == os.path.normcase(self.mProjPath):
+        if None == self.mProjPath or os.path.normcase(self.mSpacePath) == os.path.normcase(self.mProjPath):
             if 'git' == typ:
                 projects = self.__getAllGits__()
                 for project in projects: self.__doCleanGit__(project)
@@ -66,7 +66,7 @@ class ExtendClean:
             elif 'py' == typ:
                 self.__doCleanPythonProject__()
         else:
-            name = self.mProjPath[len(self.mRepoPath) + 1:]
+            name = self.mProjPath[len(self.mSpacePath) + 1:]
             if 'git' == typ:
                 self.__doCleanGit__(name)
             elif 'gradle' == typ:
@@ -84,7 +84,7 @@ class ExtendClean:
                 LoggerUtils.light('clean: ' + f)
 
     def __doCleanGradle__(self, name):
-        path = self.mRepoPath + os.sep + name
+        path = self.mSpacePath + os.sep + name
         gfile = path + os.sep + 'gradlew'
         if not os.path.isfile(gfile): return
         LoggerUtils.println('>>> Clean gradle: ' + name)
@@ -105,8 +105,8 @@ class ExtendClean:
 
     def __doCleanGit__(self, name):
         LoggerUtils.println('>>> Clean git: ' + name)
-        path = self.mRepoPath + os.sep + name
-        git = BasicGit(self.mRepoPath, path)
+        path = self.mSpacePath + os.sep + name
+        git = BasicGit(path)
         bb = git.getOtherBranches()
         for b in bb:
             if b in ['develop', 'main', 'master']: continue
@@ -117,18 +117,20 @@ class ExtendClean:
 
 def run():
     """
-    repo -clean gradle
-    repo -clean git
-    repo -clean py
+    wing -clean gradle
+    wing -clean git
+    wing -clean py
     """
     if len(sys.argv) <= 3:
         LoggerUtils.println('The most similar command is')
-        LoggerUtils.println('    repo -clean gradle')
-        LoggerUtils.println('    repo -clean git')
-        LoggerUtils.println('    repo -clean py')
+        LoggerUtils.println('    wing -clean gradle')
+        LoggerUtils.println('    wing -clean git')
+        LoggerUtils.println('    wing -clean py')
         return
-    envPath, typ = sys.argv[2], sys.argv[3]
-    zc = ExtendClean(g_repo_path, envPath)
+
+    za = BasicArgumentsValue()
+    envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)
+    zc = ExtendClean(spacePath, envPath)
     zc.doClean(typ)
 
 

@@ -18,8 +18,8 @@ ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
-def doBuild(repoPath, projName, projPath, buildType, subModule):
-    outPath = '%s/out/%s' % (repoPath, projName)
+def doBuild(spacePath, projName, projPath, buildType, subModule):
+    outPath = '%s/out/%s' % (spacePath, projName)
     try:
         os.makedirs(outPath)
     except Exception as e:
@@ -36,53 +36,53 @@ def isRelease(buildType):
     return 'r' == buildType or 'release' == buildType
 
 
-def doBuildAll(repoPath, buildType):
+def doBuildAll(spacePath, buildType):
     if isDebug(buildType):
-        ret = CmnUtils.doCmdCall('cd %s && python build.py debug' % (repoPath))
+        ret = CmnUtils.doCmdCall('cd %s && python build.py debug' % spacePath)
         assert 0 == ret or '0' == ret, 'Build all project fail for debug'
     elif isRelease(buildType):
-        ret = CmnUtils.doCmdCall('cd %s && python build.py release' % (repoPath))
+        ret = CmnUtils.doCmdCall('cd %s && python build.py release' % spacePath)
         assert 0 == ret or '0' == ret, 'Build all project fail for release'
     else:
-        ret = CmnUtils.doCmdCall('cd %s && python build.py' % (repoPath))
+        ret = CmnUtils.doCmdCall('cd %s && python build.py' % spacePath)
         assert 0 == ret or '0' == ret, 'Build all project'
 
 
 def run():
     """
-    eg: repo -build [sub module name] [build type]
-    repo -build
-    repo -build d
-    repo -build r
-    repo -build jni
-    repo -build jni d
-    repo -build jni r
+    eg: wing -build [inner module name] [build type]
+    wing -build
+    wing -build d
+    wing -build r
+    wing -build jni
+    wing -build jni d
+    wing -build jni r
     """
 
     za = BasicArgumentsValue()
-    repoPath, projPath, val1, val2 = za.get(0), za.get(1), za.get(2, ''), za.get(3, '')
+    envPath, spacePath, projPath, val1, val2 = za.get(0), za.get(1), za.get(2), za.get(3, ''), za.get(4, '')
 
-    if isDebug(val1) or isRelease(val1):  # "repo -build d" or "repo -build r"
+    if isDebug(val1) or isRelease(val1):  # "wing -build d" or "wing -build r"
         buildType = val1
         subModule = ''
-    elif isDebug(val2) or isRelease(val2):  # "repo -build jni d" or "repo -build jni r"
+    elif isDebug(val2) or isRelease(val2):  # "wing -build jni d" or "wing -build jni r"
         buildType = val2
         subModule = val1
-    else:  # "repo -build" or "repo -build jni"
+    else:  # "wing -build" or "wing -build jni"
         buildType = ''
         subModule = val1
 
-    if len(projPath) <= len(repoPath):
-        return doBuildAll(repoPath, buildType)
+    if len(projPath) <= len(spacePath):
+        return doBuildAll(spacePath, buildType)
 
-    projName = projPath[len(repoPath) + 1:]
-    if isDebug(buildType): return doBuild(repoPath, projName, projPath, 'debug', subModule)
-    if isRelease(buildType): return doBuild(repoPath, projName, projPath, 'release', subModule)
+    projName = projPath[len(spacePath) + 1:]
+    if isDebug(buildType): return doBuild(spacePath, projName, projPath, 'debug', subModule)
+    if isRelease(buildType): return doBuild(spacePath, projName, projPath, 'release', subModule)
 
-    # eg: repo -build [$sub_module], such as:
-    # repo -build
-    # repo -build jni
-    doBuild(repoPath, projName, projPath, 'all', subModule)
+    # eg: wing -build [$sub_module], such as:
+    # wing -build
+    # wing -build jni
+    doBuild(spacePath, projName, projPath, 'all', subModule)
 
 
 if __name__ == "__main__":

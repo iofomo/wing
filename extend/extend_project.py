@@ -3,8 +3,8 @@
 # @brief: publish module to maven
 # @date:   2023.08.10 14:40:50
 
-# TODO, import system module here ...
-import sys, os, time, datetime
+import os
+import sys
 
 g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
@@ -16,58 +16,58 @@ from utils.utils_file import FileUtils
 from utils.utils_import import ImportUtils
 from basic.git import BasicGit
 from basic.arguments import BasicArgumentsValue
-from basic.repoin import BasicRepoIn
+from basic.space import BasicSpace
 from basic.gradle import BasicGradle
 
-g_env_path, g_this_file, g_this_path = ImportUtils.initEnv()
-g_repo_path = ImportUtils.initPath(g_env_path)
+g_wing_path = ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
 class ProjectCollector:
-    def __init__(self):
-        self.repo = {}
+    def __init__(self, spacePath):
+        self.mSpacePath = spacePath
+        self.space = {}
         self.projects = []
 
     def doCollect(self):
-        self.__doCollectRepo__()
+        self.__doCollectSpace__()
         self.__doCollectModule__()
 
         jdata = {
-            'repo': self.repo,
+            'space': self.space,
             'project': self.projects
         }
-        FileUtils.saveJsonToFile(g_repo_path + '/out/project.json', jdata)
+        FileUtils.saveJsonToFile(self.mSpacePath + '/out/project.json', jdata)
 
-    def __doCollectRepo__(self):
-        '''
-          "repo": {
+    def __doCollectSpace__(self):
+        """
+          "space": {
             "group": "xxx",
             "branch": "main",
             "manifest": "admin.xml"
-            "remote": "repo"
+            "remote": "wing"
           }
-        '''
-        repo = BasicRepoIn(g_repo_path)
-        path = g_repo_path + '/.repo/manifests'
+        """
+        space = BasicSpace(self.mSpacePath)
+        path = self.mSpacePath + '/.wing/manifests'
         branch, sname = ProjectCollector.getGitInfo(path)
-        assert not CmnUtils.isEmpty(sname), "No repo.manifests found !"
-        self.repo["name"] = "manifests"
-        self.repo["path"] = path
-        self.repo["branch"] = branch
-        self.repo["remote"] = sname
-        self.repo["group"] = repo.getGroup()
-        self.repo["manifest"] = repo.getManifest()
+        assert not CmnUtils.isEmpty(sname), "No manifests found !"
+        self.space["name"] = "manifests"
+        self.space["path"] = path
+        self.space["branch"] = branch
+        self.space["remote"] = sname
+        self.space["group"] = space.getGroup()
+        self.space["manifest"] = space.getManifest()
 
     def __doCollectModule__(self):
-        '''
+        """
           "${module name}": {
             "branch": "${git branch name}",
             "type": "${project type}"
             "remote": "$git remote name"
           }
-        '''
-        self.scanPath(g_repo_path, 1)
+        """
+        self.scanPath(self.mSpacePath, 1)
 
     def doParseBase(self, d, pname, branch, sname):
         pitem = {
@@ -79,11 +79,11 @@ class ProjectCollector:
         return pitem
 
     def doParseWithAndroid(self, path, pitem):
-        '''
+        """
           "${module name}": {
             "type": "aar"
           }
-        '''
+        """
         gradle = BasicGradle(path)
         if not gradle.isValid(): return False
 
@@ -109,7 +109,7 @@ class ProjectCollector:
             if not os.path.isdir(d): continue
             branch, sname = ProjectCollector.getGitInfo(d)
             if not CmnUtils.isEmpty(sname):
-                pname = d[len(g_repo_path) + 1:]
+                pname = d[len(self.mSpacePath) + 1:]
                 LoggerUtils.light(pname)
                 pitem = self.doParseBase(d, pname, branch, sname)
                 self.projects.append(pitem)
@@ -121,17 +121,17 @@ class ProjectCollector:
 
     @staticmethod
     def getGitInfo(projPath):
-        git = BasicGit(g_repo_path, projPath)
+        git = BasicGit(projPath)
         return git.getCurrentBranch(), git.getServerName()
 
 
 def run():
-    '''
-    repo -project
-    '''
+    """
+    wing -project
+    """
     argv = BasicArgumentsValue()
-    projPath, envPath, cmd = argv.get(0), argv.get(1), argv.get(2)
-    ProjectCollector().doCollect()
+    envPath, spacePath, projPath, cmd = argv.get(0), argv.get(1), argv.get(2), argv.get(3)
+    ProjectCollector(spacePath).doCollect()
 
 
 if __name__ == "__main__":
