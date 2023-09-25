@@ -19,8 +19,8 @@ from framework.wing_manifest import ManifestHandler
 def doRefresh():
     LoggerUtils.println('do refresh ...')
     cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" "%s"' % (WingEnv.getWingPath(), WingEnv.getSpacePath(), WingEnv.getEnvPath(), '-refresh')
-    ret = CmnUtils.doCmdCall(cmd)
-    assert 0 == ret or '0' == ret, 'Error: refresh fail'
+    succ = CmnUtils.doCmdCall(cmd)
+    assert succ, 'Error: refresh fail'
 
 
 class WingSync:

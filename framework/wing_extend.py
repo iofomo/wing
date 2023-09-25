@@ -31,29 +31,29 @@ class WingExtend:
 
     def doBuild(self, argv):
         projPath = self.__getProjectPath__('mk.py')
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_build.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'Build fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_build.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
+        assert succ, 'Build fail'
         LoggerUtils.light('done.')
 
     def doClean(self, argv):
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_clean.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'Clean fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_clean.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+        assert succ, 'Clean fail'
         LoggerUtils.light('done.')
 
     def doRefresh(self, argv):
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_refresh.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'refresh fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_refresh.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+        assert succ, 'refresh fail'
         LoggerUtils.light('done.')
 
     def doADB(self, argv):
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_adb.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'adb fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_adb.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+        assert succ, 'adb fail'
         LoggerUtils.light('done.')
 
     def doGit(self, argv):
         projPath = self.__getProjectPath__('.git/config')
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_git.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'git command fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_git.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
+        assert succ, 'git command fail'
 
     def doSwitch(self, argv):
         switchBranch(WingEnv.getSpacePath(), argv[0])
@@ -61,8 +61,8 @@ class WingExtend:
 
     def doProject(self, argv):
         projPath = self.__getProjectPath__('.git/config')
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_project.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'project command fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_project.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
+        assert succ, 'project command fail'
 
     def doSetProperty(self, k, v):
         PropertiesUtils.set(WingEnv.getWingPath() + '.properties', k, v)
@@ -76,8 +76,8 @@ class WingExtend:
         for k, v in items.items(): LoggerUtils.info(k + '=' + v)
 
     def doKey(self, argv):
-        ret = CmnUtils.doCmdCall('cd "%s" && python extend/extend_key.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-        assert 0 == ret or '0' == ret, 'key command fail'
+        succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_key.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+        assert succ, 'key command fail'
         LoggerUtils.light('done.')
 
     def doExtend(self, _argv):

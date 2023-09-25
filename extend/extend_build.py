@@ -24,8 +24,8 @@ def doBuild(spacePath, projName, projPath, buildType, subModule):
         os.makedirs(outPath)
     except Exception as e:
         pass
-    ret = CmnUtils.doCmdCall('cd %s && python mk.py %s %s %s' % (projPath, outPath, buildType, subModule))
-    assert 0 == ret or '0' == ret, 'Build project fail'
+    succ = CmnUtils.doCmdCall('cd %s && python mk.py %s %s %s' % (projPath, outPath, buildType, subModule))
+    assert succ, 'Build project fail'
 
 
 def isDebug(buildType):
@@ -38,14 +38,14 @@ def isRelease(buildType):
 
 def doBuildAll(spacePath, buildType):
     if isDebug(buildType):
-        ret = CmnUtils.doCmdCall('cd %s && python build.py debug' % spacePath)
-        assert 0 == ret or '0' == ret, 'Build all project fail for debug'
+        succ = CmnUtils.doCmdCall('cd %s && python build.py debug' % spacePath)
+        assert succ, 'Build all project fail for debug'
     elif isRelease(buildType):
-        ret = CmnUtils.doCmdCall('cd %s && python build.py release' % spacePath)
-        assert 0 == ret or '0' == ret, 'Build all project fail for release'
+        succ = CmnUtils.doCmdCall('cd %s && python build.py release' % spacePath)
+        assert succ, 'Build all project fail for release'
     else:
-        ret = CmnUtils.doCmdCall('cd %s && python build.py' % spacePath)
-        assert 0 == ret or '0' == ret, 'Build all project'
+        succ = CmnUtils.doCmdCall('cd %s && python build.py' % spacePath)
+        assert succ, 'Build all project'
 
 
 def run():

@@ -87,12 +87,12 @@ def doCreate(envPath, _type, _mode):
         # openssl rsa -in private.pem -pubout -out public.pem
         prvtFile = envPath + os.sep + FileUtils.getTempTimeName('private_', '.pem')
         mode = '2048' if CmnUtils.isEmpty(_mode) else _mode
-        ret = CmnUtils.doCmdCall('openssl genrsa -out %s %s' % (prvtFile, mode))
-        assert 0 == ret and os.path.isfile(prvtFile), 'openssl genrsa fail'
+        succ = CmnUtils.doCmdCall('openssl genrsa -out %s %s' % (prvtFile, mode))
+        assert succ and os.path.isfile(prvtFile), 'openssl genrsa fail'
 
         pubFile = envPath + os.sep + FileUtils.getTempTimeName('public_', '.pem')
-        ret = CmnUtils.doCmdCall('openssl rsa -in %s -pubout -out %s' % (prvtFile, pubFile))
-        assert 0 == ret and os.path.isfile(prvtFile), 'openssl rsa fail'
+        succ = CmnUtils.doCmdCall('openssl rsa -in %s -pubout -out %s' % (prvtFile, pubFile))
+        assert succ and os.path.isfile(prvtFile), 'openssl rsa fail'
         LoggerUtils.light('>>> ' + prvtFile[len(envPath) + 1:])
         LoggerUtils.light('>>> ' + pubFile[len(envPath) + 1:])
         return

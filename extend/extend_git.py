@@ -192,8 +192,8 @@ def doCreateProject(spacePath, baseBranch, newBranch, buildNo, project):
     git.fetchBranch(newBranch, False)
     cfg = spacePath + os.sep + project + '/branchCreator.py'
     if not os.path.exists(cfg): return
-    ret = CmnUtils.doCmdCall('cd "%s" && python "%s" %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
-    assert 0 == ret or '0' == ret, 'Error: Update version fail ' + project
+    succ = CmnUtils.doCmdCall('cd "%s" && python "%s" %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
+    assert succ, 'Error: Update version fail ' + project
 
 
 def doCreate(spacePath, baseBranch, newBranch, buildNo):

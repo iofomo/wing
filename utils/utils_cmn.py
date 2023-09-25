@@ -126,18 +126,18 @@ class CmnUtils:
         if isWin and cmd.startswith('chmod '): return 0
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            l = ' '
-            while l != '' or p.poll() is None:
+            while p.poll() is None:
                 l = p.stdout.readline().decode()
+                if CmnUtils.isEmpty(l): break
                 l = l.strip()
                 if isWin:
                     l1 = l.replace('\n', '').replace('\r', '')
                     if len(l1) <= 0: continue
                 LoggerUtils.println(l)
-            return p.returncode
+            return p.returncode is None or p.returncode == 0 or p.returncode == '0'
         except Exception as e:
             LoggerUtils.println(e)
-        return -100
+        return False
 
     @staticmethod
     def isPy2():

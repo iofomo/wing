@@ -89,8 +89,8 @@ class ExtendClean:
         if not os.path.isfile(gfile): return
         LoggerUtils.println('>>> Clean gradle: ' + name)
         CmnUtils.doCmd('chmod a+x %s ' % gfile)
-        ret = CmnUtils.doCmdCall('cd %s && ./gradlew build --refresh-dependencies' % path)
-        assert 0 == ret or '0' == ret, 'Gradle refresh cache fail: ' + name
+        succ = CmnUtils.doCmdCall('cd %s && ./gradlew build --refresh-dependencies' % path)
+        assert succ, 'Gradle refresh cache fail: ' + name
 
     def __doCleanGradleGlobal__(self):
         LoggerUtils.println('>>> Clean gradle global cache')
