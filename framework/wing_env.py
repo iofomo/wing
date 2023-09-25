@@ -100,7 +100,7 @@ class WingEnv:
 
     @classmethod
     def __do_load_config__(cls):
-        jdata = FileUtils.loadJsonByFile(cls.getWingPath() + os.sep + 'config.json')
+        jdata = FileUtils.loadJsonByFile(cls.getWingPath() + '/res/config.json')
         spaces = jdata['space']
         if spaces is None: return None
         if cls.getSpaceName() not in spaces: return None
