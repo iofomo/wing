@@ -43,7 +43,7 @@ g_this_wing_file = os.path.realpath(sys.argv[0])
 
 g_space_path = g_env_path
 while True:
-    if os.path.exists(g_space_path + '/.wing/wing.json'): break # found wing-space
+    if os.path.exists(g_space_path + '/.wing/space.json'): break # found wing-space
     ppath = os.path.dirname(g_space_path)
     if len(g_space_path) <= len(ppath):
         g_space_path = None
@@ -260,7 +260,7 @@ def run():
 
     if cmd == 'init':
         doWingSync()
-        cmd = 'cd "%s" && python framework/wing_init.py "%s" "%s" %s ' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[2:]))
+        cmd = 'cd "%s" && python framework/wing_init.py "%s" "%s" %s ' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[2:]))
     elif cmd == 'sync':
         assert not isEmpty(g_space_path), 'Invalid wing workspace'
         doWingSync()
@@ -283,9 +283,9 @@ def run():
     else:
         assert not isEmpty(g_space_path), 'Invalid wing workspace'
         cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[1:]))
-    # println(cmd)
-    ret = doCmdCall(cmd)
-    assert 0 == ret or '0' == ret, 'Error: fail'
+    println(cmd)
+    # ret = doCmdCall(cmd)
+    # assert 0 == ret or '0' == ret, 'Error: fail'
 
 
 if __name__ == "__main__":

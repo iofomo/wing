@@ -30,7 +30,7 @@ def exportXml(f, name):
     with open(f, 'w') as f: f.writelines(contents)
 
 
-def fetchManifest(rootPath, remote, branch, xml):
+def fetchManifest(spacePath, remote, branch, xml):
     localProject = '.wing' + os.sep + 'manifests'
     # fetch
     exist = WingGit.fetchGit(localProject, remote)
@@ -43,7 +43,7 @@ def fetchManifest(rootPath, remote, branch, xml):
     # WingGit.bindBranchToRemote('.wing/manifests', branch)
 
     # export xml
-    indexXml = rootPath + os.sep + '.wing' + os.sep + 'manifest.xml'
+    indexXml = spacePath + os.sep + '.wing' + os.sep + 'manifest.xml'
     exportXml(indexXml, xml)
     assert os.path.isfile(indexXml), 'export manifest.xml fail'
 

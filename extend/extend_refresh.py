@@ -24,9 +24,8 @@ g_wing_path = ImportUtils.initEnv()
 
 # --------------------------------------------------------------------------------------------------------------------------
 class DocumentCollector:
-    def __init__(self, spacePath, usr):
+    def __init__(self, spacePath):
         self.mSpacePath = spacePath
-        self.usr = usr
         self.today, self.lastday = None, None
         self.cacher = []
 
@@ -156,7 +155,7 @@ class DocumentCollector:
 
     def __doCollectItem__(self, fpath, fname):
         ret = CmnUtils.doCmd('cd %s && git log -1 %s' % (fpath, fname))
-        author = self.usr
+        author = ''
         if None == ret or ret.find('Author:') < 0:
             timeArray = time.localtime(os.path.getmtime(fpath + os.sep + fname))
             date = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
@@ -374,7 +373,7 @@ def run():
     doRefreshGradle(spacePath)
     doFixCMakelist(spacePath, space.getManifestFile())
     # doRefreshCMakelist(spacePath, space.getManifestFile())
-    DocumentCollector(spacePath, space.getName()).doCollect()
+    DocumentCollector(spacePath).doCollect()
 
 
 if __name__ == "__main__":

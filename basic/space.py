@@ -148,10 +148,9 @@ class BasicSpace:
         self.mManifest = None
 
     def __parse_config__(self):
-        jdata = FileUtils.loadJsonByFile(self.mPath + '/.wing/wing.json')
-        assert 'group' in jdata, 'Invalid workspace !'
-        self.mConfig['group'] = jdata['group']
-        if 'name' in jdata: self.mConfig['name'] = jdata['name']
+        jdata = FileUtils.loadJsonByFile(self.mPath + '/.wing/space.json')
+        assert 'space' in jdata, 'Invalid workspace !'
+        self.mConfig['space'] = jdata['space']
         if 'branch' in jdata: self.mConfig['branch'] = jdata['branch']
         if 'manifest' in jdata:
             self.mConfig['manifest'] = jdata['manifest']
@@ -170,13 +169,10 @@ class BasicSpace:
     def updateBranch(self, branch):
         if len(self.mConfig) <= 0: self.__parse_config__()
         self.mConfig['branch'] = branch
-        FileUtils.saveJsonToFile(self.mPath + '/.wing/wing.json', self.mConfig)
+        FileUtils.saveJsonToFile(self.mPath + '/.wing/space.json', self.mConfig)
 
     def getGroup(self):
         return self.__getItem__('group')
-
-    def getName(self):
-        return self.__getItem__('name')
 
     def getManifest(self):
         return self.__getItem__('manifest')

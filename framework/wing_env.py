@@ -67,8 +67,8 @@ class WingEnv:
         cls.doSave()
 
     @classmethod
-    def getCacheFile(cls):
-        return cls.g_space_path + os.sep + '.wing' + os.sep + 'cache.json'
+    def getSpaceConfigFile(cls):
+        return cls.g_space_path + os.sep + '.wing' + os.sep + 'space.json'
 
     @classmethod
     def doSave(cls):
@@ -77,11 +77,11 @@ class WingEnv:
         if cls.g_space_branch is not None: cfg['branch'] = cls.g_space_branch
         if cls.g_space_manifest is not None: cfg['manifest'] = cls.g_space_manifest
         # add more here ...
-        FileUtils.saveJsonToFile(cls.getCacheFile(), cfg)
+        FileUtils.saveJsonToFile(cls.getSpaceConfigFile(), cfg)
 
     @classmethod
     def doLoad(cls):
-        cfg = FileUtils.loadJsonByFile(cls.getCacheFile())
+        cfg = FileUtils.loadJsonByFile(cls.getSpaceConfigFile())
         if None == cfg: return
         if 'space' in cfg: cls.g_space_name = cfg['space']
         if 'branch' in cfg: cls.g_space_branch = cfg['branch']
