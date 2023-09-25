@@ -91,11 +91,13 @@ class WingEnv:
     @classmethod
     def getSpaceRemoteManifestGit(cls):
         if cls.g_remote_manifest is None: cls.__do_load_config__()
+        assert cls.g_remote_manifest is not None, 'Error: Invalid space ' + cls.getSpaceName()
         return cls.g_remote_manifest
 
     @classmethod
     def getSpaceRemoteHost(cls):
         if cls.g_remote_host is None: cls.__do_load_config__()
+        assert cls.g_remote_host is not None, 'Error: Invalid space ' + cls.getSpaceName()
         return cls.g_remote_host
 
     @classmethod

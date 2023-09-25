@@ -92,10 +92,10 @@ def doCmdCall(cmd):
                 l1 = line.replace('\n', '').replace('\r', '')
                 if len(l1) <= 0: continue
             print(line)
-        return p.returncode
+        return p.returncode is None or p.returncode == 0 or p.returncode == '0'
     except Exception as e:
         println(e)
-    return -100
+    return False
 
 
 def doWingSync():
@@ -173,16 +173,16 @@ def fetchGitWing(wingPath):
         assert os.path.isdir(wingPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
 
     if hasBranch(wingPath, g_git_wing_branch):
-        ret = doCmdCall('cd %s && git checkout %s' % (wingPath, g_git_wing_branch))
-        assert ret is None or 0 == ret or '0' == ret, 'Error: git checkout origin'
+        succ = doCmdCall('cd %s && git checkout %s' % (wingPath, g_git_wing_branch))
+        assert succ, 'Error: git checkout origin'
     else:
-        ret = doCmdCall('cd %s && git checkout -b %s origin/%s' % (wingPath, g_git_wing_branch, g_git_wing_branch))
-        assert ret is None or 0 == ret or '0' == ret, 'Error: git checkout origin'
+        succ = doCmdCall('cd %s && git checkout -b %s origin/%s' % (wingPath, g_git_wing_branch, g_git_wing_branch))
+        assert succ, 'Error: git checkout origin'
 
     assert getCurrentBranch(wingPath) == g_git_wing_branch
 
-    ret = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
-    assert ret is None or 0 == ret or '0' == ret, 'Error: git pull origin'
+    succ = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
+    assert succ, 'Error: git pull origin'
     println('check wing done.')
 
     localVer = getVersion(g_wing_path + '/wing.py')
@@ -284,8 +284,8 @@ def run():
         assert not isEmpty(g_space_path), 'Invalid wing workspace'
         cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[1:]))
     # println(cmd)
-    ret = doCmdCall(cmd)
-    assert 0 == ret or '0' == ret, 'Error: fail'
+    succ = doCmdCall(cmd)
+    assert succ, 'Error: fail'
 
 
 if __name__ == "__main__":

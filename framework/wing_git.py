@@ -150,7 +150,7 @@ class WingGit:
             ret = WingGit.exeCmdToGit(project, 'fetch origin %s:%s' % (branch, branch))
             LoggerUtils.println(ret)
             if not WingGit.hasBranch(project, branch):
-                assert 0, 'Error: not found remote branch: ' + branch + ' for ' + project
+                assert 0, 'Error: not found remote branch ' + branch + ' for ' + project
 
         if force:
             ret = WingGit.exeCmdToGit(project, 'clean -x -f -d')
