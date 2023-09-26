@@ -11,29 +11,20 @@ ImportUtils.initEnv()
 
 # -------------------------------------------------------------
 class LoggerUtils:
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    RED_GRAY = '\033[95m'
-    BLUE_GRAY = '\033[96m'
-    WHITE = '\033[97m'
+    BLACK = '\033[0;30m'
+    RED = '\033[0;31m' #'\033[91m'
+    GREEN = '\033[0;32m'#'\033[92m'
+    YELLOW = '\033[0;33m'#'\033[93m'
+    BLUE = '\033[0;34m'#'\033[94m'
+    RED_GRAY = '\033[0;35m'#'\033[95m' # 洋红色
+    BLUE_GREEN = '\033[0;36m'#'\033[96m' # 青色, 蓝绿色
+    BLUE_GRAY = '\033[96m' # 淡蓝色
+    WHITE = '\033[0;37m'#'\033[97m'
     END = '\033[0m'
 
     STD_INPUT_HANDLE = -10
     STD_OUTPUT_HANDLE = -11
     STD_ERROR_HANDLE = -12
-
-    FOREGROUND_BLACK = 0x0
-    FOREGROUND_BLUE = 0x01  # text color contains blue.
-    FOREGROUND_GREEN = 0x02  # text color contains green.
-    FOREGROUND_RED = 0x04  # text color contains red.
-    FOREGROUND_INTENSITY = 0x08  # text color is intensified.
-
-    # BACKGROUND_BLUE = 0x10 # background color contains blue.
-    # BACKGROUND_GREEN= 0x20 # background color contains green.
-    # BACKGROUND_RED = 0x40 # background color contains red.
-    # BACKGROUND_INTENSITY = 0x80 # background color is intensified.
 
     g_os_win = -1
     g_log_file = None
@@ -55,41 +46,38 @@ class LoggerUtils:
         return txt
 
     @staticmethod
-    def printLine(title, txt=None, subTxt=None):
-        if LoggerUtils.isOsWindows():
-            # LoggerUtils.setColor(LoggerUtils.FOREGROUND_GREEN | LoggerUtils.FOREGROUND_INTENSITY)
-            print((title if None != title else '') + (txt if None != txt else '') + (subTxt if None != subTxt else ''))
-            # LoggerUtils.resetColor()
-        else:
-            _title = (LoggerUtils.GREEN + title + LoggerUtils.END) if None != title else ''
-            _txt = (LoggerUtils.RED_GRAY + txt + LoggerUtils.END) if None != txt else ''
-            _subTxt = (LoggerUtils.BLUE_GRAY + subTxt + LoggerUtils.END) if None != subTxt else ''
-            print(_title + _txt + _subTxt)
+    def printColorTexts(text1, color1, text2=None, color2=BLACK, text3=None, color3=BLACK):
+        _text1 = text1 if text1 is not None else ''
+        LoggerUtils.__do_print_color_text__(_text1, color1, False)
+        if None != text2:
+            LoggerUtils.__do_print_color_text__(text2, color2, False)
+        if None != text3:
+            LoggerUtils.__do_print_color_text__(text3, color3, False)
         sys.stdout.flush()
 
     @staticmethod
     def info(msg):
-        LoggerUtils.printBlue(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.BLUE)
 
     @staticmethod
     def i(msg):
-        LoggerUtils.printBlue(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.BLUE)
 
     @staticmethod
     def light(msg):
-        LoggerUtils.printGreen(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.GREEN)
 
     @staticmethod
     def warning(msg):
-        LoggerUtils.printYellow(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.YELLOW)
 
     @staticmethod
     def warn(msg):
-        LoggerUtils.printYellow(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.YELLOW)
 
     @staticmethod
     def w(msg):
-        LoggerUtils.printYellow(msg)
+        LoggerUtils.__do_print_color_text__(msg, LoggerUtils.YELLOW)
 
     @staticmethod
     def error(msg, stack=False):
@@ -133,70 +121,34 @@ class LoggerUtils:
         return LoggerUtils.std_out_handle
 
     @staticmethod
-    def setColor(color):
-        """(color) -> bit
-        Example: set_cmd_color(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
-        """
-        try:
-            return ctypes.windll.kernel32.SetConsoleTextAttribute(LoggerUtils.getHandler(), color)
-        except Exception as e:
-            pass
-
-    @staticmethod
-    def resetColor():
-        LoggerUtils.setColor(LoggerUtils.FOREGROUND_RED | LoggerUtils.FOREGROUND_GREEN | LoggerUtils.FOREGROUND_BLUE)
-
-    @staticmethod
     def printRed(txt):
-        if LoggerUtils.isOsWindows():
-            # LoggerUtils.setColor(LoggerUtils.FOREGROUND_RED | LoggerUtils.FOREGROUND_INTENSITY)
-            print(txt)
-            # LoggerUtils.resetColor()
-        elif isinstance(txt, str) or isinstance(txt, unicode):
-            print(LoggerUtils.RED + txt + LoggerUtils.END)
-        else:
-            print(txt)
-        sys.stdout.flush()
+        LoggerUtils.__do_print_color_text__(txt, LoggerUtils.RED)
 
     @staticmethod
     def printGreen(txt):
-        if LoggerUtils.isOsWindows():
-            # LoggerUtils.setColor(LoggerUtils.FOREGROUND_GREEN | LoggerUtils.FOREGROUND_INTENSITY)
-            print(txt)
-            # LoggerUtils.resetColor()
-        elif isinstance(txt, str) or isinstance(txt, unicode):
-            print(LoggerUtils.GREEN + txt + LoggerUtils.END)
-        else:
-            print(txt)
-        sys.stdout.flush()
+        LoggerUtils.__do_print_color_text__(txt, LoggerUtils.GREEN)
 
     @staticmethod
     def printBlue(txt):
-        if LoggerUtils.isOsWindows():
-            # LoggerUtils.setColor(LoggerUtils.FOREGROUND_BLUE | LoggerUtils.FOREGROUND_INTENSITY)
-            print(txt)
-            # LoggerUtils.resetColor()
-        elif isinstance(txt, str) or isinstance(txt, unicode):
-            print(LoggerUtils.BLUE + txt + LoggerUtils.END)
-        else:
-            print(txt)
-        sys.stdout.flush()
+        LoggerUtils.__do_print_color_text__(txt, LoggerUtils.BLUE)
 
     @staticmethod
     def printYellow(txt):
-        if LoggerUtils.isOsWindows():
-            # LoggerUtils.setColor(LoggerUtils.YELLOW | LoggerUtils.FOREGROUND_INTENSITY)
-            print(txt)
-            # LoggerUtils.resetColor()
-        elif isinstance(txt, str) or isinstance(txt, unicode):
-            print(LoggerUtils.YELLOW + txt + LoggerUtils.END)
+        LoggerUtils.__do_print_color_text__(txt, LoggerUtils.YELLOW)
+
+    @staticmethod
+    def __do_print_color_text__(txt, color_code, flush=True):
+        if isinstance(txt, str) or isinstance(txt, unicode):
+            sys.stdout.write(color_code + txt + LoggerUtils.END)
+            if flush and not txt.endswith('\n') or not txt.endswith('\r'):
+                sys.stdout.write('\n')
         else:
             print(txt)
-        sys.stdout.flush()
+        if flush: sys.stdout.flush()
 
     @classmethod
     def __monitorLoggerFile__(cls, _fname):
-        while None != cls.g_log_file:
+        while cls.g_log_file is not None:
             try:
                 if not os.path.isfile(cls.g_log_file): continue
                 currSize = os.path.getsize(cls.g_log_file)
@@ -205,7 +157,7 @@ class LoggerUtils:
                     f.seek(cls.g_log_size, 1)
                     while None != cls.g_log_file:
                         line = f.readline()
-                        if None == line: break  # exception
+                        if line is None: break  # exception
                         l = len(line)
                         if l <= 0: break  # finished
                         cls.g_log_size += l
@@ -215,7 +167,7 @@ class LoggerUtils:
 
     @classmethod
     def monitorFile(cls, fname):
-        if None == cls.g_log_file:  # create
+        if cls.g_log_file is None:  # create
             try:
                 os.remove(fname)
             except Exception as e:
@@ -224,8 +176,7 @@ class LoggerUtils:
             cls.g_log_file = fname
             t = threading.Thread(target=LoggerUtils.__monitorLoggerFile__, args=(fname,))
             t.start()
-        else:  # has running
-            if cls.g_log_file == fname: return  # do nothing
+        elif cls.g_log_file != fname:
             cls.g_log_size = 0
             cls.g_log_file = fname
 
@@ -240,9 +191,11 @@ def run():
     LoggerUtils.println('a')
     LoggerUtils.println('a', 'b')
     LoggerUtils.println(['a'], 'b', {'c'})
-    LoggerUtils.printBlue('blue')
-    LoggerUtils.printRed('red')
-    LoggerUtils.printGreen('green')
+    LoggerUtils.printBlue('blue\n')
+    LoggerUtils.printRed('red\n')
+    LoggerUtils.printGreen('green\n')
+    LoggerUtils.printColorTexts("title", LoggerUtils.RED, 'content', LoggerUtils.GREEN, 'information\n', LoggerUtils.BLUE)
+    LoggerUtils.println('done')
 
 
 if __name__ == "__main__":

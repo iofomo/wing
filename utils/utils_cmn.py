@@ -61,8 +61,20 @@ class CmnUtils:
         return '"' + arg + '"'
 
     @staticmethod
+    def formatCommand(cmd):
+        if not CmnUtils.isOsWindows(): return cmd
+        if cmd.startswith('chmod '): return None
+        if cmd.startswith('cd '):
+            pre = cmd[2:].strip()
+            if pre.startswith('"'): pre = pre[1:]
+            cmd = pre[:2] + ' && ' + cmd
+        return cmd
+
+    @staticmethod
     def doCmd(cmd):
-        if CmnUtils.isOsWindows() and cmd.startswith('chmod '): return ''
+        cmd = CmnUtils.formatCommand(cmd)
+        if cmd is None: return ''
+
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             line, l = '', ' '
@@ -76,7 +88,9 @@ class CmnUtils:
 
     @staticmethod
     def doCmd2File(cmd, fname, ignoreEmpty=True):
-        if CmnUtils.isOsWindows() and cmd.startswith('chmod '): return ''
+        cmd = CmnUtils.formatCommand(cmd)
+        if cmd is None: return False
+
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             l = ''
@@ -100,7 +114,8 @@ class CmnUtils:
     def doCmdEx(cmd):
         outResults = ''
         errResults = ''
-        if CmnUtils.isOsWindows() and cmd.startswith('chmod '): return outResults, errResults
+        cmd = CmnUtils.formatCommand(cmd)
+        if cmd is None: return outResults, errResults
 
         try:
             stdoutFile = tempfile.TemporaryFile(mode='w+')
@@ -123,7 +138,9 @@ class CmnUtils:
     @staticmethod
     def doCmdCall(cmd):
         isWin = CmnUtils.isOsWindows()
-        if isWin and cmd.startswith('chmod '): return 0
+        cmd = CmnUtils.formatCommand(cmd)
+        if cmd is None: return True
+
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while p.poll() is None:

@@ -41,7 +41,7 @@ class WingSync:
         return None
 
     @staticmethod
-    def do_sync_project(force, ignoreFail, project, group):
+    def do_sync_project(project, group, force):
         LoggerUtils.light(project.getPath())
         exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = force if exist else True
@@ -52,70 +52,49 @@ class WingSync:
         switch = projForce or len(currBranch) <= 0 or currBranch == remoteBranch
         if not switch: remoteBranch = currBranch
         # LoggerUtils.println(remoteBranch + " =?= " + currBranch)
-        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, not exist): return
+        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, not exist): return
         if switch: project.doActions(projForce)
 
     @staticmethod
-    def do_switch_project(ignoreFail, project, group):
+    def do_switch_project(project, group):
         LoggerUtils.light(project.getPath())
         exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = not exist
         remoteBranch = project.getRevision()
         if CmnUtils.isEmpty(remoteBranch): remoteBranch = group.getRevision()
         assert not CmnUtils.isEmpty(remoteBranch), 'Empty remote branch'
-        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, ignoreFail, projForce): return
+        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, projForce): return
         project.doActions(projForce)
 
     @staticmethod
-    def doSync(force, ignoreFail, isSwitch=False):
-        # update manifests
-        WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
+    def doSync(force, isSwitch):
+        if not WingEnv.isLocalMode():
+            # update manifests
+            WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
 
-        indexXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifest.xml'
+        indexXml = WingEnv.getSpacePath() + '/.wing/manifest.xml'
         xml = WingSync.parseBranchIndex(indexXml)
-        realXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifests' + os.sep + xml
+        realXml = WingEnv.getSpacePath() + '/.wing/manifests/' + xml
         mh = ManifestHandler.parseXml(WingEnv.getSpacePath(), realXml)
 
         group = mh.getGroup()
         projects = mh.getProjects()
         for project in projects:
             if isSwitch:
-                WingSync.do_switch_project(ignoreFail, project, group)
+                WingSync.do_switch_project(project, group)
             else:
-                WingSync.do_sync_project(force, ignoreFail, project, group)
+                WingSync.do_sync_project(project, group, force)
         CmnUtils.doCmd('chmod a+x %s/* ' % WingEnv.getSpacePath())
-        doRefresh()
-
-    @staticmethod
-    def doSyncProject(force, ignoreFail, projectPath):
-        # update manifests
-        WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
-
-        indexXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifest.xml'
-        xml = WingSync.parseBranchIndex(indexXml)
-        realXml = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + 'manifests' + os.sep + xml
-        mh = ManifestHandler.parseXml(WingEnv.getSpacePath(), realXml)
-
-        group = mh.getGroup()
-        projects = mh.getProjects()
-        for project in projects:
-            if project.getPath() != projectPath: continue
-            WingSync.do_sync_project(force, ignoreFail, project, group)
-            break
-        else:
-            LoggerUtils.error('Not found project: ' + projectPath)
         doRefresh()
 
 
 def run():
-    forceSwitch, ignoreFail = False, False
+    forceSwitch = False
     if 3 < len(sys.argv):
         for arg in sys.argv[3:]:
             if '-f' == arg:
                 forceSwitch = True
-            elif '-i' == arg:
-                ignoreFail = True
-    return WingSync.doSync(forceSwitch, ignoreFail)
+    return WingSync.doSync(forceSwitch, False)
 
 
 if __name__ == "__main__":

@@ -141,11 +141,11 @@ class WingGit:
         return False
 
     @staticmethod
-    def fetchBranch(project, branch, force, ignoreFail, clean=False):
+    def fetchBranch(project, branch, force, clean=False):
         if branch.startswith("refs/tags/"):  # fetch tag, "refs/tags/tag-3.6.3"
-            return WingGit.fetchTag(project, branch[10:], force, ignoreFail, clean)
+            return WingGit.fetchTag(project, branch[10:])
 
-        # LoggerUtils.println(project, branch, force, ignoreFail, clean)
+        # LoggerUtils.println(project, branch, force, clean)
         if not WingGit.hasBranch(project, branch):
             ret = WingGit.exeCmdToGit(project, 'fetch origin %s:%s' % (branch, branch))
             LoggerUtils.println(ret)
@@ -165,28 +165,26 @@ class WingGit:
 
         currBranch = WingGit.getCurrentBranch(project)
         if currBranch != branch:
-            if ignoreFail: return False
             if clean: CmnUtils.remove(WingEnv.getSpacePath() + os.path.sep + project)
             assert 0, 'Error: ' + currBranch + ' != ' + branch + ' for ' + project
 
         WingGit.gitSetUpstream(project, currBranch)
 
-        ret = WingGit.exeCmdToGit(project, 'pull origin %s' % (branch))
+        ret = WingGit.exeCmdToGit(project, 'pull origin %s' % branch)
         return WingGit.checkResult(ret)
 
     @staticmethod
-    def fetchTag(project, tag, force, ignoreFail, clean=False):
-        # LoggerUtils.println(project, branch, force, ignoreFail, clean)
+    def fetchTag(project, tag):
         if WingGit.getCurrentBranch(project) == tag: return True
 
-        ret = WingGit.exeCmdToGit(project, 'fetch origin %s' % (tag))
+        ret = WingGit.exeCmdToGit(project, 'fetch origin %s' % tag)
         LoggerUtils.println(ret)
-        if None != ret and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
+        if ret is not None and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
             assert 0, 'Error: fetch tag fail, ' + tag + ' for ' + project
 
-        ret = WingGit.exeCmdToGit(project, 'checkout %s' % (tag))
+        ret = WingGit.exeCmdToGit(project, 'checkout %s' % tag)
         LoggerUtils.println(ret)
-        if None != ret and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
+        if ret is not None and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
             assert 0, 'Error: checkout tag fail 1, ' + tag + ' for ' + project
 
         if WingGit.getCurrentBranch(project) != tag:

@@ -29,7 +29,7 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '0.9.2'
+g_ver = '0.9.2' # sync with setup.py
 # wing publish time, wing -v
 g_date = '2023.09.22'
 g_git_host = 'git@github.com:iofomo'
@@ -60,13 +60,26 @@ def println(*p):
     sys.stdout.flush()
 
 
-def isWindows(): return sys.platform.lower().startswith('win')
+def isOsWindows(): return sys.platform.lower().startswith('win')
 
 
 def isEmpty(s): return s is None or len(s) <= 0
 
 
+def formatCommand(cmd):
+    if not isOsWindows(): return cmd
+    if cmd.startswith('chmod '): return None
+    if cmd.startswith('cd '):
+        pre = cmd[2:].strip()
+        if pre.startswith('"'): pre = pre[1:]
+        cmd = pre[:2] + ' && ' + cmd
+    return cmd
+
+
 def doCmd(cmd):
+    cmd = formatCommand(cmd)
+    if cmd is None: return ''
+
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         lines = ''
@@ -81,9 +94,12 @@ def doCmd(cmd):
 
 
 def doCmdCall(cmd):
+    cmd = formatCommand(cmd)
+    if cmd is None: return True
+
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        isWin = isWindows()
+        isWin = isOsWindows()
         while p.poll() is None:
             line = p.stdout.readline().decode()
             if isEmpty(line): break
@@ -103,7 +119,7 @@ def doWingSync():
         os.makedirs(g_wing_path)
 
     fetchGitWing(g_wing_path)
-    if not isWindows():
+    if not isOsWindows():
         doCmd('chmod a+x %s ' % g_wing_path)
 
 
@@ -164,26 +180,29 @@ def fetchGitWing(wingPath):
     @param wingPath such as: /Users/${username}/.wing/wing
     """
     println('check wing')
+    localMode = False
     if os.path.isdir(wingPath + os.sep + '.git'):  # /Users/${user name}/.wing/wing/.git Exist, then git pull
         doCmd('cd %s && git pull' % wingPath)
     elif os.path.isfile(wingPath + '/framework/wing_init.py'):  # Exist, then local mode
-        print('Info: local mode')
+        localMode = True
+        print('run with local mode')
     else: # Not exist, then clone
         doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
         assert os.path.isdir(wingPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
 
-    if hasBranch(wingPath, g_git_wing_branch):
-        succ = doCmdCall('cd %s && git checkout %s' % (wingPath, g_git_wing_branch))
-        assert succ, 'Error: git checkout origin'
-    else:
-        succ = doCmdCall('cd %s && git checkout -b %s origin/%s' % (wingPath, g_git_wing_branch, g_git_wing_branch))
-        assert succ, 'Error: git checkout origin'
+    if not localMode:
+        if hasBranch(wingPath, g_git_wing_branch):
+            succ = doCmdCall('cd %s && git checkout %s' % (wingPath, g_git_wing_branch))
+            assert succ, 'Error: git checkout origin'
+        else:
+            succ = doCmdCall('cd %s && git checkout -b %s origin/%s' % (wingPath, g_git_wing_branch, g_git_wing_branch))
+            assert succ, 'Error: git checkout origin'
 
-    assert getCurrentBranch(wingPath) == g_git_wing_branch
+        assert getCurrentBranch(wingPath) == g_git_wing_branch
 
-    succ = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
-    assert succ, 'Error: git pull origin'
-    println('check wing done.')
+        succ = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
+        assert succ, 'Error: git pull origin'
+        println('check wing done.')
 
     localVer = getVersion(g_wing_path + '/wing.py')
     if 0 <= compareVer(g_ver, localVer): return
@@ -254,6 +273,9 @@ def run():
         return
 
     cmd = sys.argv[1]
+    if cmd in ['-h', '--h', '-help', '--help']:
+        showHelp()
+        return
     if cmd in ['-v', '--v', '-version', '--version']:
         println('wing %s, (%s)' % (g_ver, g_date))
         return

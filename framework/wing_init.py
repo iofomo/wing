@@ -29,29 +29,49 @@ def exportXml(f, name):
     ]
     with open(f, 'w') as f: f.writelines(contents)
 
+def createLocalXml(f, branch):
+    path = os.path.dirname(f)
+    if not os.path.isdir(path): os.makedirs(path)
+    contents = [
+        '<?xml version="1.0" encoding="UTF-8"?>\n',
+        '<manifest>\n',
+        '\n    <remote name="origin" fetch=".."/>\n',
+        '\n    <!-- branch -->\n',
+        '    <default revision="%s" remote="origin" sync-j="4"/>\n' % branch,
+        '\n    <!-- TODO add git here ... -->\n',
+        '<!--    <project path="doc" name="project/transec/doc.git" />    -->\n',
+        '\n</manifest>\n'
+    ]
+    with open(f, 'w') as f: f.writelines(contents)
+
 
 def fetchManifest(spacePath, remote, branch, xml):
     localProject = '.wing' + os.sep + 'manifests'
-    # fetch
-    exist = WingGit.fetchGit(localProject, remote)
-    # switch branch
-    LoggerUtils.light(remote)
-    WingGit.fetchBranch('.wing/manifests', branch, True, False, not exist)
-    assert WingGit.checkBranch('.wing/manifests', branch), 'check manifests branch fail'
+    if WingEnv.isLocalMode():
+        localXml = spacePath + os.sep + localProject + os.sep + xml
+        if not os.path.isfile(localXml):
+            createLocalXml(localXml, branch)
+    else:
+        # fetch
+        exist = WingGit.fetchGit(localProject, remote)
+        # switch branch
+        LoggerUtils.light(remote)
+        WingGit.fetchBranch('.wing/manifests', branch, True, not exist)
+        assert WingGit.checkBranch('.wing/manifests', branch), 'check manifests branch fail'
 
-    # bind remote branch
-    # WingGit.bindBranchToRemote('.wing/manifests', branch)
+        # bind remote branch
+        # WingGit.bindBranchToRemote('.wing/manifests', branch)
 
     # export xml
-    indexXml = spacePath + os.sep + '.wing' + os.sep + 'manifest.xml'
+    indexXml = spacePath + '/.wing/manifest.xml'
     exportXml(indexXml, xml)
     assert os.path.isfile(indexXml), 'export manifest.xml fail'
 
 
 def switchBranch(spacePath, branch):
     fetchManifest(spacePath, WingEnv.getSpaceRemoteManifestGit(), branch, WingEnv.getSpaceManifestFile())
-    WingSync.doSync(True, False, True)
-    WingEnv.setWingBranch(branch)
+    WingSync.doSync(True, True)
+    WingEnv.setSpaceBranch(branch)
 
 
 def run():
