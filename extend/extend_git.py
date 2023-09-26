@@ -22,6 +22,14 @@ g_wing_path = ImportUtils.initEnv()
 
 
 # --------------------------------------------------------------------------------------------------------------------------
+def printLine(a, b, c=None):
+    if CmnUtils.isEmpty(b) or b == 'null':
+        b, c = None, None
+    LoggerUtils.printColorTexts(a, LoggerUtils.GREEN,
+                                b, LoggerUtils.RED_GRAY,
+                                c, LoggerUtils.BLUE_GRAY
+                                )
+
 def printResults(results, gapFmt):
     if CmnUtils.isEmpty(results):
         LoggerUtils.w('No git repository found')
@@ -30,9 +38,9 @@ def printResults(results, gapFmt):
     for result in results:
         title = LoggerUtils.alignLine(result[0])
         if CmnUtils.isEmpty(result[2]) or result[1] == result[2]:
-            LoggerUtils.printLine(title, result[1])
+            printLine(title, result[1])
         else:
-            LoggerUtils.printLine(title, result[1], gapFmt % result[2])
+            printLine(title, result[1], gapFmt % result[2])
 
 
 def printPushResults(results):
@@ -42,9 +50,9 @@ def printPushResults(results):
     for result in results:
         title = LoggerUtils.alignLine(result[0])
         if result[2]:
-            LoggerUtils.printLine(title, ' -> ' + result[1], ' : Success')
+            printLine(title, ' -> ' + result[1], ' : Success')
         else:
-            LoggerUtils.printLine(title, ' -> ' + result[1], ' : Fail')
+            printLine(title, ' -> ' + result[1], ' : Fail')
 
 
 class ExtendBranch(ExtendBase):

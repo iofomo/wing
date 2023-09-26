@@ -11,6 +11,10 @@
     "gitlab": {
       "manifest": "manifest.git",
       "host": "git@gitlab.com:iofomo"
+    },
+    "local": {
+      "manifest": "xxx.git",
+      "host": "git@xxx.com:xxx"
     }
   }
 }

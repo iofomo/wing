@@ -4,8 +4,9 @@
 # @date:   2023.08.10 14:40:50
 
 import traceback, os, sys, ctypes, threading
-from utils.utils_import import ImportUtils
+os.system("") # Unable to explain this, just for Windows cmd color print
 
+from utils.utils_import import ImportUtils
 ImportUtils.initEnv()
 
 
@@ -49,10 +50,11 @@ class LoggerUtils:
     def printColorTexts(text1, color1, text2=None, color2=BLACK, text3=None, color3=BLACK):
         _text1 = text1 if text1 is not None else ''
         LoggerUtils.__do_print_color_text__(_text1, color1, False)
-        if None != text2:
+        if text2 is not None:
             LoggerUtils.__do_print_color_text__(text2, color2, False)
-        if None != text3:
+        if text3 is not None:
             LoggerUtils.__do_print_color_text__(text3, color3, False)
+        sys.stdout.write('\n')
         sys.stdout.flush()
 
     @staticmethod
@@ -140,7 +142,7 @@ class LoggerUtils:
     def __do_print_color_text__(txt, color_code, flush=True):
         if isinstance(txt, str) or isinstance(txt, unicode):
             sys.stdout.write(color_code + txt + LoggerUtils.END)
-            if flush and not txt.endswith('\n') or not txt.endswith('\r'):
+            if flush and not txt.endswith('\n') and not txt.endswith('\r'):
                 sys.stdout.write('\n')
         else:
             print(txt)

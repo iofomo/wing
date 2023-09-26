@@ -47,8 +47,11 @@ class WingGit:
             if item.startswith('nothing to commit'):
                 ok = ''
                 continue
-        LoggerUtils.printLine(LoggerUtils.alignLine(project), branch, ok)
-        if None == ok: LoggerUtils.println(ret)
+        LoggerUtils.printColorTexts(LoggerUtils.alignLine(project), LoggerUtils.GREEN,
+                                    branch, LoggerUtils.RED_GRAY,
+                                    ok, LoggerUtils.BLUE_GRAY
+                                    )
+        if ok is None: LoggerUtils.println(ret)
 
     @staticmethod
     def exeCmdToGits(cmd):

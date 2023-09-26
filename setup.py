@@ -6,6 +6,8 @@
 import os
 import sys
 import shutil
+os.system("") # Unable to explain this, just for Windows cmd color print
+
 from utils.utils_cmn import CmnUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
@@ -45,11 +47,11 @@ def doClean():
 
 
 def printInfo():
-    print('          ' + setup_config['name'])
-    print(' version: ' + setup_config['version'])
-    print('  author: ' + setup_config['author'])
-    print('   email: ' + setup_config['author_email'])
-    print(setup_config['description'])
+    print('         ' + setup_config['name'])
+    print('version: ' + setup_config['version'])
+    print(' author: ' + setup_config['author'])
+    print('  email: ' + setup_config['author_email'])
+    print('         ' + setup_config['description'])
 
 
 def doInstall():
@@ -67,7 +69,7 @@ def doInstall():
             CmnUtils.doCmd('chmod a+x %s ' % (g_bin_path + os.sep + 'wing'))
 
         printInfo()
-        LoggerUtils.light('success.')
+        LoggerUtils.light(' success.')
         return
     except Exception as e:
         print(e)

@@ -7,11 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
-
-try:
-    from urllib import request as urllib2
-except:
-    import urllib2
+os.system("") # Unable to explain this, just for Windows cmd color print
 
 try:
     if sys.version_info.major < 3:  # 2.x

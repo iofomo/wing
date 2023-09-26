@@ -39,7 +39,7 @@ def createLocalXml(f, branch):
         '\n    <!-- branch -->\n',
         '    <default revision="%s" remote="origin" sync-j="4"/>\n' % branch,
         '\n    <!-- TODO add git here ... -->\n',
-        '<!--    <project path="doc" name="project/transec/doc.git" />    -->\n',
+        '<!--    <project path="xxx" name="xxx.git" />    -->\n',
         '\n</manifest>\n'
     ]
     with open(f, 'w') as f: f.writelines(contents)
