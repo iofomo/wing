@@ -183,6 +183,9 @@ def fetchGitWing(wingPath):
         localMode = True
         print('run with local mode')
     else: # Not exist, then clone
+        # git clone git@github.com:xxxxxx/${git name}
+        # git clone git@codeup.aliyun.com.com:xxxxxx/${git name}
+        # git clone ssh://xxxxxx@xxx.com:${port}/${git name}
         doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
         assert os.path.isdir(wingPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
 

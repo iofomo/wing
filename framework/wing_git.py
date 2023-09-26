@@ -230,6 +230,9 @@ class WingGit:
         tmpPath = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + FileUtils.getTempName('.tmp_')
         try:
             os.makedirs(tmpPath)
+            # git clone git@github.com:xxxxxx/${git lib name}
+            # git clone git@codeup.aliyun.com.com:xxxxxx/${git lib name}
+            # git clone ssh://xxxxxx@gerrit.xxx.com:2901/${git lib name}
             CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
             assert os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'), 'Make sure have correct access rights for ' + projectServer + ' !'
 

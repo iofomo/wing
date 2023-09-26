@@ -8,9 +8,9 @@
       "manifest": "manifest.git",
       "host": "git@gitee.com:iofomo"
     },
-    "gitlab": {
+    "gerrit": {
       "manifest": "manifest.git",
-      "host": "git@gitlab.com:iofomo"
+      "host": "ssh://xxxxxx@gerrit.iofomo.com:2901"
     },
     "local": {
       "manifest": "xxx.git",
