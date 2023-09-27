@@ -42,7 +42,7 @@ class WingSync:
 
     @staticmethod
     def do_sync_project(project, group, force):
-        LoggerUtils.light(project.getPath())
+        LoggerUtils.light('\n' + project.getPath())
         exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = force if exist else True
         remoteBranch = project.getRevision()
@@ -57,7 +57,7 @@ class WingSync:
 
     @staticmethod
     def do_switch_project(project, group):
-        LoggerUtils.light(project.getPath())
+        LoggerUtils.light('\n' + project.getPath())
         exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = not exist
         remoteBranch = project.getRevision()
