@@ -145,10 +145,10 @@ def doDump(env_path, _mode):
 def run():
     """
     wing -adb top
-    wing -adb pull {package name}
-    wing -adb stop {package name}
-    wing -adb clear {package name}
-    wing -dump
+    wing -adb pull <package name>
+    wing -adb stop <package name>
+    wing -adb clear <package name>
+    wing -adb dump [ui/sys/log]
     """
     za = BasicArgumentsValue()
     envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)

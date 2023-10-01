@@ -246,11 +246,16 @@ def doFlush(spacePath, baseBranch, newBranch, buildNo):
     with open(path + '/build-info.txt', 'w') as f: f.write(baseBranch + ',' + newBranch + ',' + buildNo)
 
 
-def createBranch(spacePath, baseBranch, newBranch, buildNo):
-    LoggerUtils.light('Create branch: ' + baseBranch + ' -> ' + newBranch + ': ' + buildNo)
+def createTag(spacePath, baseBranch, newTag):
+    LoggerUtils.light('Create tag: ' + baseBranch + ' -> ' + newTag)
     doClean()
-    doCreate(spacePath, baseBranch, newBranch, buildNo)
-    doFlush(spacePath, baseBranch, newBranch, buildNo)
+
+
+def createBranch(spacePath, baseBranch, newBranch):
+    LoggerUtils.light('Create branch: ' + baseBranch + ' -> ' + newBranch)
+    doClean()
+    doCreate(spacePath, baseBranch, newBranch, '1')
+    doFlush(spacePath, baseBranch, newBranch, '1')
 
 
 def run():
@@ -264,11 +269,17 @@ def run():
         printResults(results, ' ≠ %s(remote)')
         return
     if '-push' == cmd:
-        pushGroupToRemote(spacePath, envPath, projPath, 'f' == argv.get(3))
+        # wing -push [f]
+        pushGroupToRemote(spacePath, envPath, projPath, 'f' == argv.get(4))
         return
-    if '-newbranch' == cmd:
-        buildNo = argv.get(5) if 5 < argv.count() else '0'
-        createBranch(spacePath, argv.get(3), argv.get(4), buildNo)
+    if '-create' == cmd:
+        # wing -create t/tag <base branch name> <new tag name>
+        # wing -create b/branch <base branch name> <new tag name>
+        arg = argv.get(4)
+        if arg == 't' or arg == 'tag':
+            createTag(spacePath, argv.get(5), argv.get(6))
+        elif arg == 'b' or arg == 'branch':
+            createBranch(spacePath, argv.get(5), argv.get(6))
         return
     if '-status' == cmd:
         results = []

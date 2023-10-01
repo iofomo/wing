@@ -225,8 +225,9 @@ def doRefreshGradle(spacePath):
     if not os.path.isfile(gf): return
 
     LoggerUtils.light('refresh: default.gradle ...')
-    mvnusr = PropertiesUtils.get(g_wing_path + '/.wing/wing.properties', 'mvnusr')
-    mvnpwd = PropertiesUtils.get(g_wing_path + '/.wing/wing.properties', 'mvnpwd')
+    ppath = os.path.dirname(g_wing_path)
+    mvnusr = PropertiesUtils.get(ppath + '/wing.properties', 'mvnusr')
+    mvnpwd = PropertiesUtils.get(ppath + '/wing.properties', 'mvnpwd')
     if CmnUtils.isEmpty(mvnusr) or CmnUtils.isEmpty(mvnpwd):
         LoggerUtils.w('No mvn account found !')
         return
@@ -365,7 +366,7 @@ def run():
     """
     wing -refresh
     """
-    spacePath, envPath = sys.argv[1], sys.argv[2]
+    envPath, spacePath = sys.argv[1], sys.argv[2]
     space = BasicSpace(spacePath)
     space.println()
 
