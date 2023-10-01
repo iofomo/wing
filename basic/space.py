@@ -150,7 +150,6 @@ class BasicSpace:
     def __parse_config__(self):
         jdata = FileUtils.loadJsonByFile(self.mPath + '/.wing/space.json')
         assert 'space' in jdata, 'Invalid workspace !'
-        self.mConfig['space'] = jdata['space']
         if 'branch' in jdata: self.mConfig['branch'] = jdata['branch']
         if 'manifest' in jdata:
             self.mConfig['manifest'] = jdata['manifest']

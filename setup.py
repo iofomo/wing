@@ -45,10 +45,21 @@ def doClean():
     except Exception as e:
         print(e)
 
+def getWingVer():
+    with open(g_this_path + os.sep + 'wing.py', 'r') as f:
+        for line in f.readlines():
+            line = line.strip()
+            if CmnUtils.isEmpty(line): continue
+            if not line.startswith('g_ver'): continue
+            pos1 = line.find("'")
+            pos2 = line.rfind("'")
+            return line[pos1+1:pos2]
+    return None
 
 def printInfo():
     print('         ' + setup_config['name'])
-    print('version: ' + setup_config['version'])
+    ver = getWingVer()
+    if not CmnUtils.isEmpty(ver): print('version: ' + ver)
     print(' author: ' + setup_config['author'])
     print('  email: ' + setup_config['author_email'])
     print('         ' + setup_config['description'])
@@ -60,6 +71,8 @@ def doInstall():
     try:
         if os.path.isdir(g_wing_path): shutil.rmtree(g_wing_path)
         shutil.copytree(g_this_path, g_wing_path)
+        if os.path.isdir(g_wing_path + os.sep + '.git'): shutil.rmtree(g_wing_path + os.sep + '.git')
+        if os.path.isdir(g_wing_path + os.sep + '.idea'): shutil.rmtree(g_wing_path + os.sep + '.idea')
         LoggerUtils.println('copy bin')
         if CmnUtils.isOsWindows():
             shutil.copyfile(g_this_path + os.sep + 'wing.py', g_bin_path + os.sep + 'wing.py')
@@ -84,7 +97,6 @@ def doUninstall():
 
 setup_config = {
     'name'          :'wing',
-    'version'       :'0.9.2',
     'author'        :'iofomo',
     'author_email'  :'rd-share@iofomo.com',
     'description'   :'Develop tools'

@@ -66,24 +66,24 @@ class AdbUtils:
     @staticmethod
     def stop(pkg):
         print('stop: ' + pkg)
-        ret = CmnUtils.doCmd('adb shell am force-stop %s' % (pkg))
+        ret = CmnUtils.doCmd('adb shell am force-stop %s' % pkg)
         print(ret)
 
     @staticmethod
     def clear(pkg):
         print('clear: ' + pkg)
-        ret = CmnUtils.doCmd('adb shell pm clear %s' % (pkg))
+        ret = CmnUtils.doCmd('adb shell pm clear %s' % pkg)
         print(ret)
 
     @staticmethod
     def getApkFile(pkgName):
         while True:
-            ret = CmnUtils.doCmd('adb shell pm path %s' % (pkgName))
+            ret = CmnUtils.doCmd('adb shell pm path %s' % pkgName)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
                     return ret[len('package:'):]
-            ret = CmnUtils.doCmd('adb shell pm path --user 0 %s' % (pkgName))
+            ret = CmnUtils.doCmd('adb shell pm path --user 0 %s' % pkgName)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
@@ -99,14 +99,14 @@ class AdbUtils:
 
     @staticmethod
     def install(apkFile):
-        ret = CmnUtils.doCmd('adb install -r "%s"' % (apkFile))
+        ret = CmnUtils.doCmd('adb install -r "%s"' % apkFile)
         if None == ret: return False
         return 0 <= ret.lower().find('success')
 
     @staticmethod
     def uninstall(pkgName):
         ins = AdbUtils.isInstalled(pkgName)
-        ret = CmnUtils.doCmd('adb uninstall "%s"' % (pkgName))
+        ret = CmnUtils.doCmd('adb uninstall "%s"' % pkgName)
         if None == ret: return not ins
         return 0 <= ret.lower().find('success') or not ins
 
@@ -206,8 +206,7 @@ class AdbUtils:
         astring = ''
         for k, v in args.items():
             astring += ' --extra %s:s:%s' % (k, v)
-        cmd = 'adb shell content call --uri content://%s --method abg --extra %s:i:%d%s' % (
-        authorities, tName, tVal, astring)
+        cmd = 'adb shell content call --uri content://%s --method abg --extra %s:i:%d%s' % (authorities, tName, tVal, astring)
         return CmnUtils.doCmd(cmd)
 
     @staticmethod

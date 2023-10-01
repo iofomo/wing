@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(g_this_path))
 
 from utils.utils_cmn import CmnUtils
 from utils.utils_logger import LoggerUtils
+from utils.utils_file import FileUtils
 from framework.wing_env import WingEnv
 from framework.wing_git import WingGit
 from framework.wing_manifest import ManifestHandler
@@ -89,12 +90,20 @@ class WingSync:
 
 
 def run():
-    forceSwitch = False
+    # clean tmp
+    path = WingEnv.getSpacePath() + '/.wing'
+    ff = os.listdir(path)
+    if not CmnUtils.isEmpty(ff):
+        for f in ff:
+            if not f.startswith('.tmp_'): continue
+            FileUtils.remove(path + os.sep + f)
+
+    force = False
     if 3 < len(sys.argv):
         for arg in sys.argv[3:]:
             if '-f' == arg:
-                forceSwitch = True
-    return WingSync.doSync(forceSwitch, False)
+                force = True
+    return WingSync.doSync(force, False)
 
 
 if __name__ == "__main__":

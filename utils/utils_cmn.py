@@ -77,9 +77,11 @@ class CmnUtils:
 
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            line, l = '', ' '
-            while l != '' or p.poll() is None:
+            line = ''
+            while p.poll() is None:
                 l = p.stdout.readline().decode()
+                # LoggerUtils.println(l)
+                if CmnUtils.isEmpty(l): break
                 line += l
             return line
         except Exception as e:
@@ -93,10 +95,10 @@ class CmnUtils:
 
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            l = ''
             with open(fname, 'w') as f:
-                while l != '' or p.poll() is None:
+                while p.poll() is None:
                     l = p.stdout.readline().decode()
+                    if CmnUtils.isEmpty(l): break
                     f.write(l)
             return False
         except Exception as e:

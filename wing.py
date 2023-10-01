@@ -25,7 +25,7 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '0.9.2' # sync with setup.py
+g_ver = '0.9.4'
 # wing publish time, wing -v
 g_date = '2023.09.22'
 g_git_host = 'git@github.com:iofomo'
@@ -181,7 +181,7 @@ def fetchGitWing(wingPath):
         doCmd('cd %s && git pull' % wingPath)
     elif os.path.isfile(wingPath + '/framework/wing_init.py'):  # Exist, then local mode
         localMode = True
-        print('run with local mode')
+        print('local wing mode')
     else: # Not exist, then clone
         # git clone git@github.com:xxxxxx/${git name}
         # git clone git@codeup.aliyun.com.com:xxxxxx/${git name}
@@ -206,7 +206,7 @@ def fetchGitWing(wingPath):
     localVer = getVersion(g_wing_path + '/wing.py')
     if 0 <= compareVer(g_ver, localVer): return
     shutil.copyfile(g_wing_path + os.sep + 'wing.py', g_this_wing_file)
-    println('update wing %s -> %d done.' % (g_ver, localVer))
+    println('update wing %s -> %d\ndone.' % (g_ver, localVer))
 
 
 def checkGitEnv():
@@ -230,33 +230,35 @@ def showHelp():
                 create workspace, such as: 
                      wing init xxx develop android.xml
                      wing init xxx tag_1.0 service.xml
-           sync [-f] [-i] sync code from remote where config from manifest
+           sync [-f] sync code from remote from manifests
                  -f: force switch to new branch
-                 -i: ignore git sync fail
 
+        wing git commands: 
            -status    print curren local branch and remote info
            
            -branch    print curren local branch and remote info
            
-           -push
+           -push [-f]
            
            -create [-b/-branch] [-t/-tag] [-p/-project]
                 -b/-branch  <new branch name>
                 -t/-tag <new tag name>
                 -p/-project <template name> <project name> [module name={project name}]
 
-           -clean   Restore working tree files
-           
            -switch
+           
+        wing project commands:
+           -clean   Restore working tree files
            
            -build
            
            -refresh
-           
+
+        wing property commands: 
            -setprop <key> <value>
            -getprop <key>
            -listprop
-           
+
         git commands: all the git commands has remain
            <git command>
         ''')
