@@ -72,17 +72,19 @@ class CmnUtils:
 
     @staticmethod
     def doCmd(cmd):
+        # print(cmd)
         cmd = CmnUtils.formatCommand(cmd)
         if cmd is None: return ''
 
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             line = ''
-            while p.poll() is None:
-                l = p.stdout.readline().decode()
-                # LoggerUtils.println(l)
-                if CmnUtils.isEmpty(l): break
-                line += l
+            while True:
+                l = p.stdout.readline()
+                if not l: break
+                l = l.decode().strip()
+                if len(l) <= 0: continue
+                line += l + '\n'
             return line
         except Exception as e:
             LoggerUtils.println(e)
@@ -96,10 +98,12 @@ class CmnUtils:
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             with open(fname, 'w') as f:
-                while p.poll() is None:
-                    l = p.stdout.readline().decode()
-                    if CmnUtils.isEmpty(l): break
-                    f.write(l)
+                while True:
+                    line = p.stdout.readline()
+                    if not line: break
+                    line = line.decode().strip()
+                    if len(line) <= 0: continue
+                    f.write(line + '\n')
             return False
         except Exception as e:
             LoggerUtils.println(e)
@@ -145,14 +149,15 @@ class CmnUtils:
 
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            while p.poll() is None:
-                l = p.stdout.readline().decode()
-                if CmnUtils.isEmpty(l): break
-                l = l.strip()
+            while True:
+                line = p.stdout.readline()
+                if not line: break
+                line = line.decode().strip()
+                if len(line) <= 0: continue
                 if isWin:
-                    l1 = l.replace('\n', '').replace('\r', '')
+                    l1 = line.replace('\n', '').replace('\r', '')
                     if len(l1) <= 0: continue
-                LoggerUtils.println(l)
+                LoggerUtils.println(line)
             return p.returncode is None or p.returncode == 0 or p.returncode == '0'
         except Exception as e:
             LoggerUtils.println(e)
@@ -274,6 +279,34 @@ class CmnUtils:
     def updateVersion(cls, ver):
         vn, vc = cls.parseVersion(ver)
         return '%s.%d' % (vn, vc)
+
+    @staticmethod
+    def selectProjects(projects, msg=None):
+        index = 0
+        for project in projects:
+            index += 1
+            if index < 10:
+                LoggerUtils.i('    %d: %s' % (index, project))
+            else:
+                LoggerUtils.i('   %d: %s' % (index, project))
+        LoggerUtils.i('\r\n  ' + ('choose all: <Enter Key>' if CmnUtils.isEmpty(msg) else msg))
+
+        run = CmnUtils.input('  >>>: ')
+        run = run.strip()
+        if CmnUtils.isEmpty(run): return projects
+
+        pp = []
+        ll = len(projects)
+        items = run.split(' ')
+        for item in items:
+            if CmnUtils.isEmpty(item): continue
+            try:
+                index = int(item) - 1
+            except Exception as e:
+                continue
+            if 0 <= index < ll:
+                pp.append(projects[index])
+        return pp
 
 
 class cmn_thread(threading.Thread):

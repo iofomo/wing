@@ -26,11 +26,12 @@ def printLine(a, b, c=None):
     if CmnUtils.isEmpty(b) or b == 'null':
         b, c = None, None
     LoggerUtils.printColorTexts(a, LoggerUtils.GREEN,
-                                b, LoggerUtils.RED_GRAY,
-                                c, LoggerUtils.BLUE_GRAY
+                                b, LoggerUtils.BLUE_GRAY,
+                                c, LoggerUtils.RED_GRAY
                                 )
 
-def printResults(results, gapFmt):
+
+def printResults(results, gapFmt, defRes=''):
     if CmnUtils.isEmpty(results):
         LoggerUtils.w('No git repository found')
         return
@@ -38,7 +39,7 @@ def printResults(results, gapFmt):
     for result in results:
         title = LoggerUtils.alignLine(result[0])
         if CmnUtils.isEmpty(result[2]) or result[1] == result[2]:
-            printLine(title, result[1])
+            printLine(title, result[1] if CmnUtils.isEmpty(result[1]) or result[1] == 'null' else result[1] + defRes)
         else:
             printLine(title, result[1], gapFmt % result[2])
 
@@ -55,6 +56,10 @@ def printPushResults(results):
             printLine(title, ' -> ' + result[1], ' : Fail')
 
 
+def isGitManifest(manifestsPath):
+    return BasicGit(manifestsPath).isValidGit()
+
+
 class ExtendBranch(ExtendBase):
     def __init__(self, path, results):
         ExtendBase.__init__(self, path)
@@ -65,7 +70,9 @@ class ExtendBranch(ExtendBase):
         projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
             self.parseBranch(g_wing_path, '.wing/wing')
-            self.parseBranch(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
+            manifestsPath = self.mBaseSpacePath + os.sep + '.wing/manifests'
+            if isGitManifest(manifestsPath):
+                self.parseBranch(manifestsPath, '.wing/manifests', space.getBranch())
         remote = project.getRevision()
         if CmnUtils.isEmpty(remote): remote = space.getBranch()
         self.parseBranch(projPath, pname, remote)
@@ -87,14 +94,16 @@ class ExtendStatus(ExtendBase):
         projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
             self.parseBranch(g_wing_path, '.wing/wing')
-            self.parseBranch(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
+            manifestsPath = self.mBaseSpacePath + os.sep + '.wing/manifests'
+            if isGitManifest(manifestsPath):
+                self.parseBranch(manifestsPath, '.wing/manifests')
         remote = project.getRevision()
         if CmnUtils.isEmpty(remote): remote = space.getBranch()
-        self.parseBranch(projPath, pname, remote)
+        self.parseBranch(projPath, pname)
 
-    def parseBranch(self, projPath, pname, remote=None):
+    def parseBranch(self, projPath, pname):
         git = BasicGit(projPath)
-        status = 'changed' if git.isChanged() else ''
+        _, status = git.getStatus()
         branch = git.getCurrentBranch()
         branch = 'null' if CmnUtils.isEmpty(branch) else branch
         self.mResults.append([pname, branch, status])
@@ -106,15 +115,15 @@ def pushToRemoteGit(gitPath, isForce):
     branch = None
     try:
         branch = git.getCurrentRemoteBranch()
-        assert None != branch, 'Not found remote server branch'
+        assert branch is not None, 'Not found remote server branch'
         if isForce:
             git.pushCodeToServer(branch)
         else:
-            git.pushCodeToGerrit(branch)
+            git.pushCodeToReview(branch)
         return 1, branch
     except Exception as e:
         LoggerUtils.e(e)
-    return 0, branch if None != branch else 'None'
+    return 0, branch if branch is not None else 'None'
 
 
 class ExtendPush(ExtendBase):
@@ -128,7 +137,9 @@ class ExtendPush(ExtendBase):
         projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
             self.doPush(g_wing_path, '.wing/wing')
-            self.doPush(self.mBaseSpacePath + os.sep + '.wing/manifests', '.wing/manifests')
+            manifestsPath = self.mBaseSpacePath + os.sep + '.wing/manifests'
+            if isGitManifest(manifestsPath):
+                self.doPush(manifestsPath, '.wing/manifests')
         self.doPush(projPath, pname)
 
     def doPush(self, gitPath, pname):
@@ -175,36 +186,49 @@ def doUpdateManifest(spacePath, baseBranch, newBranch):
                             line = line.replace('"' + branch + '"', '"' + newBranch + '"')
                         ff.write(line)
 
-        ret = CmnUtils.doCmd('cd %s && git status' % (path))
-        LoggerUtils.println(ret)
-        if 0 < ret.find('nothing to commit'): return
-        CmnUtils.doCmdCall('cd %s && git add .' % (path))
-        CmnUtils.doCmdCall('cd %s && git commit -m "create %s from %s"' % (path, baseBranch, newBranch))
-        ret = CmnUtils.doCmd('cd %s && git push origin HEAD:refs/heads/%s' % (path, newBranch))
-        LoggerUtils.println(ret)
-        assert 0 < ret.find(' done'), "manifest commit fail"
+        BasicGit(path).pushCommitToServer(newBranch, "create %s from %s" % (baseBranch, newBranch))
     except Exception as e:
         LoggerUtils.exception(e)
-        CmnUtils.doCmdCall('cd %s && git stash' % (path))
-        CmnUtils.doCmdCall('cd %s && git reset' % (path))
         assert 0
 
 
-def doCreateProject(spacePath, baseBranch, newBranch, buildNo, project):
+def doCreateBranch(spacePath, project, baseBranch, newBranch):
     LoggerUtils.light(project + ' -> ' + newBranch)
     git = BasicGit(spacePath + os.sep + project)
     git.fetchBranch(baseBranch, False)
-    rbs = git.getRemoteBranches()
-    if None == rbs or newBranch not in rbs:
-        git.pushToRemoteBranch(newBranch)
-    git.fetchBranch(newBranch, False)
-    cfg = spacePath + os.sep + project + '/branchCreator.py'
-    if not os.path.exists(cfg): return
-    succ = CmnUtils.doCmdCall('cd "%s" && python "%s" %s %s %s' % (os.path.dirname(cfg), os.path.basename(cfg), baseBranch, newBranch, buildNo))
-    assert succ, 'Error: Update version fail ' + project
+    git.pushToRemoteBranch(newBranch)
+    return git
 
 
-def doCreate(spacePath, baseBranch, newBranch, buildNo):
+def doCreateTag(spacePath, project, baseBranch, newTag, msg):
+    LoggerUtils.light(project + ' -> ' + newTag)
+    git = BasicGit(spacePath + os.sep + project)
+    git.fetchBranch(baseBranch, False)
+    git.pushToRemoteTag(newTag, msg)
+
+
+def doCreateBranches(spacePath, baseBranch, newBranch):
+    space = BasicSpace(spacePath)
+    # space.println()
+    projects = space.getManifestProjects()
+
+    # do to projects
+    for project in projects:
+        if not CmnUtils.isEmpty(project.getRevision()):
+            LoggerUtils.w('ignore: ' + project.getPath() + ', has revision')
+            continue
+        doCreateBranch(spacePath, project.getPath(), baseBranch, newBranch)
+
+    if isGitManifest(spacePath + os.sep + '.wing/manifests'):
+        # do to manifest
+        git = doCreateBranch(spacePath, '.wing/manifests', baseBranch, newBranch)
+        git.fetchBranch(newBranch, False)
+        # update manifest
+        doUpdateManifest(spacePath, baseBranch, newBranch)
+        git.fetchBranch(baseBranch, False)
+
+
+def doCreateTages(spacePath, baseBranch, newTag, msg):
     space = BasicSpace(spacePath)
     # space.println()
     projects = space.getManifestProjects()
@@ -212,50 +236,30 @@ def doCreate(spacePath, baseBranch, newBranch, buildNo):
     # do to projects
     for project in projects:
         if not CmnUtils.isEmpty(project.getRevision()): continue
-        doCreateProject(baseBranch, newBranch, buildNo, project.getPath())
+        doCreateTag(spacePath, project.getPath(), baseBranch, newTag, msg)
 
     # do to manifest
-    doCreateProject(spacePath, baseBranch, newBranch, buildNo, '.wing/manifests')
-    # update manifest
-    doUpdateManifest(spacePath, baseBranch, newBranch)
-    # update space config
-    space.updateBranch(newBranch)
+    if isGitManifest(spacePath + os.sep + '.wing/manifests'):
+        doCreateTag(spacePath, '.wing/manifests', baseBranch, newTag, msg)
 
 
-def doClean(spacePath):
-    path = spacePath + '/out'
-    if not os.path.isdir(path): return
-    # clean cache results
-    FileUtils.remove(path)
-    # ff = os.listdir(path)
-    # for f in ff:
-    #     fileName = path + os.path.sep + f
-    #     if not os.path.isfile(fileName): continue
-    #     if f == 'build-info.txt':
-    #         os.remove(fileName)
-    #         continue
-    #     if fileName.find('_to_') < 0: continue
-    #     os.remove(fileName)
-
-
-def doFlush(spacePath, baseBranch, newBranch, buildNo):
+def doFlush(spacePath, baseBranch, newBranch):
     path = spacePath + '/out'
     FileUtils.ensureDir(path)
 
     with open(path + '/' + baseBranch + '_to_' + newBranch, 'w') as f: f.write('')
-    with open(path + '/build-info.txt', 'w') as f: f.write(baseBranch + ',' + newBranch + ',' + buildNo)
+    with open(path + '/build-info.txt', 'w') as f: f.write(baseBranch + ',' + newBranch)
 
 
-def createTag(spacePath, baseBranch, newTag):
-    LoggerUtils.light('Create tag: ' + baseBranch + ' -> ' + newTag)
-    doClean()
+def createTag(spacePath, baseBranch, newTag, msg):
+    LoggerUtils.light('Create workspace tag: ' + baseBranch + ' -> ' + newTag)
+    doCreateTages(spacePath, baseBranch, newTag, msg)
 
 
 def createBranch(spacePath, baseBranch, newBranch):
-    LoggerUtils.light('Create branch: ' + baseBranch + ' -> ' + newBranch)
-    doClean()
-    doCreate(spacePath, baseBranch, newBranch, '1')
-    doFlush(spacePath, baseBranch, newBranch, '1')
+    LoggerUtils.light('Create workspace branch: ' + baseBranch + ' -> ' + newBranch)
+    doCreateBranches(spacePath, baseBranch, newBranch)
+    doFlush(spacePath, baseBranch, newBranch)
 
 
 def run():
@@ -266,26 +270,26 @@ def run():
         results = []
         eb = ExtendBranch(spacePath, results)
         eb.doActionWithManifest(True)
-        printResults(results, ' ≠ %s(remote)')
+        printResults(results, ' ≠ %s(remote)', ' (no changes)')
         return
     if '-push' == cmd:
         # wing -push [f]
         pushGroupToRemote(spacePath, envPath, projPath, 'f' == argv.get(4))
         return
     if '-create' == cmd:
-        # wing -create t/tag <base branch name> <new tag name>
-        # wing -create b/branch <base branch name> <new tag name>
+        # wing -create t {new tag name} {base branch name} [tag message]
+        # wing -create b {new branch name} {base branch name}
         arg = argv.get(4)
-        if arg == 't' or arg == 'tag':
-            createTag(spacePath, argv.get(5), argv.get(6))
-        elif arg == 'b' or arg == 'branch':
+        if arg == 't':
+            createTag(spacePath, argv.get(5), argv.get(6), argv.get(7))
+        elif arg == 'b':
             createBranch(spacePath, argv.get(5), argv.get(6))
         return
     if '-status' == cmd:
         results = []
         eb = ExtendStatus(spacePath, results)
         eb.doActionWithManifest(True)
-        printResults(results, ' : %s')
+        printResults(results, ' : %s', ' (nothing to commit)')
         return
     LoggerUtils.e('UNsupport command: ' + cmd)
 

@@ -25,12 +25,12 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '0.9.4'
+g_ver = '1.0.12'
 # wing publish time, wing -v
-g_date = '2023.09.22'
-g_git_host = 'git@github.com:iofomo'
-g_git_wing_remote = 'wing'
-g_git_wing_branch = 'main'
+g_date = '2023.10.01'
+g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'
+g_git_wing_remote = 'platform/wing'
+g_git_wing_branch = 'master'
 # --------------------------------------------------------------------------------------------------------------------------
 # init project env
 g_env_path = os.getcwd()
@@ -79,10 +79,11 @@ def doCmd(cmd):
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         lines = ''
-        while p.poll() is None:
-            line = p.stdout.readline().decode()
-            if isEmpty(line): break
-            lines += line
+        while True:
+            line = p.stdout.readline()
+            if not line: break
+            line = line.decode().strip()
+            if 0 < len(line): lines += line + '\n'
         return lines
     except Exception as e:
         println(e)
@@ -96,10 +97,11 @@ def doCmdCall(cmd):
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         isWin = isOsWindows()
-        while p.poll() is None:
-            line = p.stdout.readline().decode()
-            if isEmpty(line): break
-            line = line.strip()
+        while True:
+            line = p.stdout.readline()
+            if not line: break
+            line = line.decode().strip()
+            if len(line) <= 0: continue
             if isWin:
                 l1 = line.replace('\n', '').replace('\r', '')
                 if len(l1) <= 0: continue
@@ -147,27 +149,33 @@ def getVersion(rf):
     with open(rf, 'r') as f:
         for line in f.readlines():
             if not line.startswith('g_ver'): continue
-            ver = line.split('=')[1].strip()
+            ver = line.split('=')[1].strip()[1:-1]
             break
     return ver
 
 
+def getVersionItem(ver):
+    if isEmpty(ver): return 0,0,0,0
+    vv = ver.split('.')
+    vmajor = int(vv[0]) if 0 < len(vv) else 0
+    vmid = int(vv[1]) if 1 < len(vv) else 0
+    vmin = int(vv[2]) if 2 < len(vv) else 0
+    vbuild = int(vv[3]) if 3 < len(vv) else 0
+    return vmajor, vmid, vmin, vbuild
+
+
 def compareVer(_sVer, _dVer):
-    sVer = '' if isEmpty(_sVer) else _sVer
-    dVer = '' if isEmpty(_dVer) else _dVer
-    ss = sVer.split('.')
-    dd = dVer.split('.')
-    ls = len(ss)
-    ld = len(dd)
-    l = ls if ls < ld else ld
-    if 0 < l:
-        for i in range(l):
-            if ss[i] < dd[i]: return -1
-            if ss[i] > dd[i]: return 1
-    if l < ls:
-        return 1
-    elif l < ld:
-        return -1
+    smajor, smid, smin, sbuild = getVersionItem(_sVer)
+    dmajor, dmid, dmin, dbuild = getVersionItem(_dVer)
+
+    if smajor < dmajor: return -1
+    if smajor > dmajor: return 1
+    if smid < dmid: return -1
+    if smid > dmid: return 1
+    if smin < dmin: return -1
+    if smin > dmin: return 1
+    if sbuild < dbuild: return -1
+    if sbuild > dbuild: return 1
     return 0
 
 
@@ -175,7 +183,7 @@ def fetchGitWing(wingPath):
     """
     @param wingPath such as: /Users/${username}/.wing/wing
     """
-    println('check wing')
+    println('\nwing')
     localMode = False
     if os.path.isdir(wingPath + os.sep + '.git'):  # /Users/${user name}/.wing/wing/.git Exist, then git pull
         doCmd('cd %s && git pull' % wingPath)
@@ -186,8 +194,10 @@ def fetchGitWing(wingPath):
         # git clone git@github.com:xxxxxx/${git name}
         # git clone git@codeup.aliyun.com.com:xxxxxx/${git name}
         # git clone ssh://xxxxxx@xxx.com:${port}/${git name}
-        doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
-        assert os.path.isdir(wingPath + os.sep + '.git'), 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
+        ret = doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
+        if not os.path.isdir(os.path.isdir(wingPath + os.sep + '.git')):
+            println(ret)
+            assert 0, 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'
 
     if not localMode:
         if hasBranch(wingPath, g_git_wing_branch):
@@ -201,12 +211,11 @@ def fetchGitWing(wingPath):
 
         succ = doCmdCall('cd %s && git pull origin %s' % (wingPath, g_git_wing_branch))
         assert succ, 'Error: git pull origin'
-        println('check wing done.')
 
     localVer = getVersion(g_wing_path + '/wing.py')
     if 0 <= compareVer(g_ver, localVer): return
     shutil.copyfile(g_wing_path + os.sep + 'wing.py', g_this_wing_file)
-    println('update wing %s -> %d\ndone.' % (g_ver, localVer))
+    println('update wing %s -> %s\n' % (g_ver, localVer))
 
 
 def checkGitEnv():
@@ -227,37 +236,14 @@ def showHelp():
     print('''
         wing commands
            init {workspace name} {branch or tag name} {manifest name}
-                create workspace, such as: 
-                     wing init xxx develop android.xml
-                     wing init xxx tag_1.0 service.xml
-           sync [-f] sync code from remote from manifests
-                 -f: force switch to new branch
-
-        wing git commands: 
-           -status    print curren local branch and remote info
-           
-           -branch    print curren local branch and remote info
-           
-           -push [-f]
-           
-           -create [-b/-branch] [-t/-tag] [-p/-project]
-                -b/-branch  <new branch name>
-                -t/-tag <new tag name>
-                -p/-project <template name> <project name> [module name={project name}]
-
-           -switch
-           
-        wing project commands:
-           -clean   Restore working tree files
-           
-           -build
-           
-           -refresh
-
-        wing property commands: 
-           -setprop <key> <value>
-           -getprop <key>
-           -listprop
+                    create wing-space, such as: 
+                    wing init workspace1 develop dev.xml
+                    wing init workspace2 tag_1.0 release.xml
+           sync [f] sync code from remote from manifests
+                 f: Force switch to new branch, discard all local changes
+        
+        wing tool commands
+            -tree [l] Print directory structure
 
         git commands: all the git commands has remain
            <git command>
@@ -301,11 +287,11 @@ def run():
         cmdStr = cmdStr[pos + len('git '):]  # got "reset --hard"
         cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, cmdStr)
     elif cmd.startswith('-'):
-        assert not isEmpty(g_space_path), 'Invalid wing workspace'
-        cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[1:]))
+        # assert not isEmpty(g_space_path), 'Invalid wing workspace'
+        cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" %s' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[1:]))
     else:
-        assert not isEmpty(g_space_path), 'Invalid wing workspace'
-        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[1:]))
+        # assert not isEmpty(g_space_path), 'Invalid wing workspace'
+        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[1:]))
     # println(cmd)
     succ = doCmdCall(cmd)
     assert succ, 'Error: fail'

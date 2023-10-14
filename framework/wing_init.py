@@ -9,12 +9,14 @@ g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
 sys.path.append(os.path.dirname(g_this_path))
 
+from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from framework.wing_env import WingEnv
 from framework.wing_git import WingGit
 from framework.wing_sync import WingSync
+from basic.git import BasicGit
 
 ImportUtils.initEnv()
 
@@ -29,8 +31,10 @@ def exportXml(f, name):
     ]
     with open(f, 'w') as f: f.writelines(contents)
 
-def createLocalXml(f, branch):
-    path = os.path.dirname(f)
+
+def createLocalXml(fname, branch):
+    LoggerUtils.printColorTexts('\ninit local manifest -> ' + os.path.basename(fname), LoggerUtils.BLUE_GRAY)
+    path = os.path.dirname(fname)
     if not os.path.isdir(path): os.makedirs(path)
     contents = [
         '<?xml version="1.0" encoding="UTF-8"?>\n',
@@ -42,12 +46,14 @@ def createLocalXml(f, branch):
         '<!--    <project path="xxx" name="xxx.git" />    -->\n',
         '\n</manifest>\n'
     ]
-    with open(f, 'w') as f: f.writelines(contents)
+    with open(fname, 'w') as f: f.writelines(contents)
+    LoggerUtils.warn('\nUpdate manifest here: ')
+    LoggerUtils.warn('File "%s"' % fname)
 
 
 def fetchManifest(spacePath, remote, branch, xml):
     localProject = '.wing' + os.sep + 'manifests'
-    if WingEnv.isLocalMode():
+    if CmnUtils.isEmpty(remote) and not BasicGit(spacePath + os.sep + localProject).isValidGit():# local mode
         localXml = spacePath + os.sep + localProject + os.sep + xml
         if not os.path.isfile(localXml):
             createLocalXml(localXml, branch)
@@ -55,8 +61,8 @@ def fetchManifest(spacePath, remote, branch, xml):
         # fetch
         exist = WingGit.fetchGit(localProject, remote)
         # switch branch
-        LoggerUtils.light(remote)
-        WingGit.fetchBranch('.wing/manifests', branch, True, not exist)
+        LoggerUtils.light('\nmanifests')
+        WingGit.fetchRemote('.wing/manifests', branch, True, not exist)
         assert WingGit.checkBranch('.wing/manifests', branch), 'check manifests branch fail'
 
         # bind remote branch
@@ -69,8 +75,9 @@ def fetchManifest(spacePath, remote, branch, xml):
 
 
 def switchBranch(spacePath, branch):
-    fetchManifest(spacePath, WingEnv.getSpaceRemoteManifestGit(), branch, WingEnv.getSpaceManifestFile())
-    WingSync.doSync(True, True)
+    LoggerUtils.light('\n.wing/manifests')
+    WingGit.fetchRemote('.wing/manifests', branch, False, False)
+    WingSync.doSync(False, branch)
     WingEnv.setSpaceBranch(branch)
 
 
@@ -85,7 +92,7 @@ def run():
     WingEnv.setSpaceBranch(branch)
     FileUtils.remove(WingEnv.getSpacePath() + os.sep + 'out')  # clear out
     fetchManifest(spacePath, WingEnv.getSpaceRemoteManifestGit(), WingEnv.getSpaceBranch(), WingEnv.getSpaceManifestFile())
-    WingSync.doSync(True, False)
+    WingSync.doSync(True)
 
 
 if __name__ == "__main__":

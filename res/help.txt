@@ -1,73 +1,83 @@
     wing commands
-       init      first checkout code, like this: {project name} {branch name} {xml name}, such as:
-                    wing init xxx develop android.xml
-       sync [-f] [-i] update git code from wing manifest git, -f: force switch to workspace branch, -i: ignore git sync fail
+       init {workspace name} {branch or tag name} {manifest name}
+                Create wing-space, such as:
+                wing init workspace1 develop dev.xml
+                wing init workspace2 tag_1.0 release.xml
+       sync [f] sync code from remote from manifests
+            f:  Force switch to new branch, discard all local changes
 
-    extend commands: always start with '-', such as:
-       -build [module] [d/r]
-                 build current project by mk.sh with debug mode
-            module: project module name
-                 d: debug build mode
-                 r: release build mode
-       -clean [gradle/git] clean cache files
-                 py: python compile file cache
-                 gradle: gradle cache
-                 git: clean branch but current and "develop" and "master" and cache files
+    wing git commands:
+       -status  Check if the local code has changed
+
+       -branch  Check if the branch is consistent with the remote
+
+       -push [f] Push code to remote
+            f   Directly push to the remote end without code review
+
+       -create {type name}
+            b {new branch name} {base branch name}
+                Create a new branch from the base or current branch
+            t {new tag name} {base branch name} [tag message]
+                Create a new tag from the base or current branch
+
+       -switch {type name}
+            b {branch name}
+                Switch all git libraries in the workspace to the target branch
+            t {tag name}
+                Switch all git libraries in the workspace to the target tag
+
+    wing tool commands
+        -tree [l] Print directory structure
+        -key {type}
+            create {key type} {mode}
+                create RSA public and private keys with 1024 or 2048(default) mode
+            list {file} [pwd]
+                print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
+            hash {string}
+                print md5/sha256/hash/... of string
+
+    wing project commands:
+       -create [type name]
+            pc {name}
+                Create an empty project from the template project of the Python gui client
+            pp {name}
+                Create an empty project from the template project of the Python publish
+            ap {name} {module name}
+                Create an empty project from the template project of the Android
+            anp {name} {module name}
+                Create an empty project from the template project of the Android with native
+            ip {name} {module name}
+                Create an empty project from the template project of the iOS
+            jp {name} {module name}
+                Create an empty project from the template project of the Java
+            cp {name}
+                Create an empty project from the template project of the C/C++
+            gp {name}
+                Create an empty project from the template project of the Go
+            fp {name}
+                Create an empty project from the template project of the Flutter
+
+       -clean   Clear all the temp file, such as *.pyc
+
+       -build [r/d] Execute mk.py file in the project directory
+            r   release build
+            d   debug build
+
        -refresh
-                 update CMakeLists.txt for Clion
-                 update doc.md for all document files
-       -adb [top/pull/stop/clear/ui] [package name]
-                 top: dump activity or window info
-                 pull: pull apk file of target package name
-                 stop: kill target package name
-                 clear: remove target app data
-                 ui: dump top app activity info to ui.xml
-       -branch
-                 show all project branch info
-       -push [f]
-                 push current commit to remote
-                 f: force push to remote, otherwise push for CodeReview(recommend)
-       -switch [branch]
-                 switch workspace to target branch
-       -project
-                parse all git project info to out/project.json
-       -key [list] [file] [pwd]
-               file: apk/ipa/jar/mobileprovision/keystore/jks/rsa
-                pwd: password just for jks or keystore file
-            [create] [rsa] [1024/2048]
-                1024/2048: key length, 2048 default
-       -setprop [key] [value]
-               set wing property key with value
-       -getprop [key]
-               get wing property key value
-       -listprop
-               print all wing property
+            Scan workspace documents
 
-    git commands: work on the current change (see also: git help everyday)
-       add       Add file contents to the index
-       mv        Move or rename a file, a directory, or a symlink
-       restore   Restore working tree files
-       rm        Remove files from the working tree and from the index
+    wing config commands:
+       -prop {s/set} {key} [value]
+            Set key and value to wing property
+       -prop {g/get} {key}
+            Get value from wing property
+       -prop
+            Print all wing properties
 
-    git commands: examine the history and state (see also: git help revisions)
-       bisect    Use binary search to find the commit that introduced a bug
-       diff      Show changes between commits, commit and working tree, etc
-       grep      Print lines matching a pattern
-       log       Show commit logs
-       show      Show various types of objects
-       status    Show the working tree status
+       -space add {name} {host} [manifest]
+            Config space host information
+       -space
+            Print all the spcase information
 
-    git commands: grow, mark and tweak your common history
-       branch    List, create, or delete branches
-       commit    Record changes to the repository
-       merge     Join two or more development histories together
-       rebase    Reapply commits on top of another base tip
-       reset     Reset current HEAD to the specified state
-       switch    Switch branches
-       tag       Create, list, delete or verify a tag object signed with GPG
-
-    git commands: collaborate (see also: git help workflows)
-       fetch     Download objects and refs from another repository
-       pull      Fetch from and integrate with another repository or a local branch
-       push      Update remote refs along with associated objects
-
+    git commands: all the git commands has remain
+       <git command>

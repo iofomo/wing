@@ -4,6 +4,7 @@
 # @date:   2023.08.10 14:40:50
 
 import traceback, os, sys, ctypes, threading
+import binascii
 os.system("") # Unable to explain this, just for Windows cmd color print
 
 from utils.utils_import import ImportUtils
@@ -139,14 +140,39 @@ class LoggerUtils:
         LoggerUtils.__do_print_color_text__(txt, LoggerUtils.YELLOW)
 
     @staticmethod
+    def isPrintText(txt):
+        if isinstance(txt, str): return True
+        if sys.version_info.major < 3:
+            try:
+                import unicode
+                if isinstance(txt, unicode): return True
+            except Exception as e:
+                pass
+        return False
+
+    @staticmethod
     def __do_print_color_text__(txt, color_code, flush=True):
-        if isinstance(txt, str) or isinstance(txt, unicode):
+        if LoggerUtils.isPrintText(txt):
             sys.stdout.write(color_code + txt + LoggerUtils.END)
             if flush and not txt.endswith('\n') and not txt.endswith('\r'):
                 sys.stdout.write('\n')
         else:
             print(txt)
         if flush: sys.stdout.flush()
+
+    @staticmethod
+    def hexdump(s):
+        hex_string = binascii.hexlify(s)
+        hex_groups = [hex_string[i:i + 32] for i in range(0, len(hex_string), 32)]
+        ascii_groups = [s[i:i + 16] for i in range(0, len(s), 16)]
+        offset = 0
+        for hex_group, ascii_group in zip(hex_groups, ascii_groups):
+            hex_offset = '{0:08x}'.format(offset)
+            hex_group_formatted = ' '.join(hex_group[i:i + 2] for i in range(0, len(hex_group), 2))
+            ascii_group_formatted = ''.join(char if 32 <= ord(char) < 127 else '.' for char in ascii_group)
+            print("{0}: {1:<47} {2}".format(hex_offset, hex_group_formatted, ascii_group_formatted))
+            offset += 16
+        sys.stdout.flush()
 
     @classmethod
     def __monitorLoggerFile__(cls, _fname):
@@ -186,6 +212,59 @@ class LoggerUtils:
     def monitorFileCancel(cls):
         cls.g_log_size = 0
         cls.g_log_file = None
+
+    @staticmethod
+    def doPrintTreeLine(line, maxLen):
+        if maxLen <= 0:
+            print(line)
+        else:
+            line = line.strip()
+            ll = line.replace('─', ' ').replace('├', ' ').replace('│', ' ').replace('└', ' ')
+            l = len(ll.decode())
+            l += (len(ll) - l) / 2
+            assert l < maxLen, '%d, %d' % (maxLen, l)
+            print(line + ' ' + ('-' * (maxLen - l)))
+
+    @staticmethod
+    def getTreeMaxLen(dir_path, indent=''):
+        maxLen = 0
+        files = os.listdir(dir_path)
+        for i, file in enumerate(files):
+            full_path = os.path.join(dir_path, file)
+            if os.path.isdir(full_path):
+                l = LoggerUtils.getTreeMaxLen(full_path, indent + '    ')
+            else:
+                l = len(indent + '    ' + file)
+            if maxLen < l: maxLen = l
+        return maxLen
+
+    @staticmethod
+    def doPrintTree(dir_path, maxLen, indent=''):
+        files = os.listdir(dir_path)
+        files.sort()
+
+        fcnt = len(files)
+        for i, file in enumerate(files):
+            full_path = os.path.join(dir_path, file)
+            is_last = i == fcnt - 1
+            if os.path.isdir(full_path):
+                if is_last:
+                    LoggerUtils.doPrintTreeLine(indent + '└── ' + file, maxLen)
+                    LoggerUtils.doPrintTree(full_path, maxLen, indent + '    ')
+                else:
+                    LoggerUtils.doPrintTreeLine(indent + '├── ' + file, maxLen)
+                    LoggerUtils.doPrintTree(full_path, maxLen, indent + '│   ')
+            else:
+                if is_last:
+                    LoggerUtils.doPrintTreeLine(indent + '└── ' + file, maxLen)
+                else:
+                    LoggerUtils.doPrintTreeLine(indent + '├── ' + file, maxLen)
+
+    @staticmethod
+    def printTree(dir_path, printLine=False):
+        print(os.path.basename(dir_path))
+        maxLen = LoggerUtils.getTreeMaxLen(dir_path) + 4 if printLine else 0
+        LoggerUtils.doPrintTree(dir_path, maxLen)
 
 
 def run():

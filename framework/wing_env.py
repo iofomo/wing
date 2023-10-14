@@ -5,7 +5,8 @@
 import os
 from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
-
+from utils.utils_logger import LoggerUtils
+from utils.utils_properties import PropertiesUtils
 
 # -------------------------------------------------------------
 class WingEnv:
@@ -50,7 +51,7 @@ class WingEnv:
 
     @classmethod
     def isLocalMode(cls):
-        return cls.g_space_name == 'local'
+        return CmnUtils.isEmpty(WingEnv.getSpaceRemoteManifestGit())
 
     @classmethod
     def getSpaceManifestFile(cls):
@@ -106,13 +107,18 @@ class WingEnv:
 
     @classmethod
     def __do_load_config__(cls):
-        jdata = FileUtils.loadJsonByFile(cls.getWingPath() + '/config.json')
-        spaces = jdata['space']
-        if spaces is None: return None
-        if cls.getSpaceName() not in spaces: return None
-        space = spaces[cls.getSpaceName()]
-        cls.g_remote_host = space['host']
-        cls.g_remote_manifest = space['manifest']
+        spaces = PropertiesUtils.getAll(os.path.dirname(cls.getWingPath()) + os.sep + 'space.properties')
+        if CmnUtils.isEmpty(spaces):
+            LoggerUtils.w('No space found, do "wing -space add" first')
+            assert 0
+            return
+        if cls.getSpaceName() not in spaces:
+            LoggerUtils.w('Space "' + cls.getSpaceName() + '" not found, do "wing -space add" first')
+            assert 0
+            return
+        items = spaces[cls.getSpaceName()].split(',')
+        cls.g_remote_host = items[0] if 0 < len(items) else ''
+        cls.g_remote_manifest = items[1] if 1 < len(items) else ''
 
     @staticmethod
     def isOsLinux():

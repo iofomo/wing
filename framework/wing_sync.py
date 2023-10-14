@@ -18,11 +18,9 @@ from framework.wing_manifest import ManifestHandler
 
 # ----------------------------------------------------------------------------------------------------------------------
 def doRefresh():
-    LoggerUtils.println('do refresh ...')
-    cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" "%s"' % (WingEnv.getWingPath(), WingEnv.getSpacePath(), WingEnv.getEnvPath(), '-refresh')
-    succ = CmnUtils.doCmdCall(cmd)
+    LoggerUtils.light('\nrefresh ...')
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_refresh.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), '-refresh'))
     assert succ, 'Error: refresh fail'
-
 
 class WingSync:
 
@@ -53,27 +51,27 @@ class WingSync:
         switch = projForce or len(currBranch) <= 0 or currBranch == remoteBranch
         if not switch: remoteBranch = currBranch
         # LoggerUtils.println(remoteBranch + " =?= " + currBranch)
-        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, not exist): return
+        if not WingGit.fetchRemote(project.getPath(), remoteBranch, projForce, not exist): return
         if switch: project.doActions(projForce)
 
     @staticmethod
-    def do_switch_project(project, group):
+    def do_switch_project(project, group, targetRemote):
         LoggerUtils.light('\n' + project.getPath())
         exist = WingGit.fetchGit(project.getPath(), project.getName())  # if local not found, then fetch
         projForce = not exist
-        remoteBranch = project.getRevision()
-        if CmnUtils.isEmpty(remoteBranch): remoteBranch = group.getRevision()
-        assert not CmnUtils.isEmpty(remoteBranch), 'Empty remote branch'
-        if not WingGit.fetchBranch(project.getPath(), remoteBranch, projForce, projForce): return
+        if not WingGit.fetchRemote(project.getPath(), targetRemote, projForce, projForce): return
         project.doActions(projForce)
 
     @staticmethod
-    def doSync(force, isSwitch):
+    def doSync(force, targetRemote=None):
         if not WingEnv.isLocalMode():
             # update manifests
             WingGit.updateCurrentBranch('.wing/manifests', WingEnv.getSpaceBranch())
 
         indexXml = WingEnv.getSpacePath() + '/.wing/manifest.xml'
+        if not os.path.isfile(indexXml):
+            LoggerUtils.e('Invalid wing space !!!')
+            return
         xml = WingSync.parseBranchIndex(indexXml)
         realXml = WingEnv.getSpacePath() + '/.wing/manifests/' + xml
         mh = ManifestHandler.parseXml(WingEnv.getSpacePath(), realXml)
@@ -81,10 +79,11 @@ class WingSync:
         group = mh.getGroup()
         projects = mh.getProjects()
         for project in projects:
-            if isSwitch:
-                WingSync.do_switch_project(project, group)
-            else:
+            if targetRemote is None:
                 WingSync.do_sync_project(project, group, force)
+            else:
+                WingSync.do_switch_project(project, group, targetRemote)
+
         CmnUtils.doCmd('chmod a+x %s/* ' % WingEnv.getSpacePath())
         doRefresh()
 
@@ -103,7 +102,7 @@ def run():
         for arg in sys.argv[3:]:
             if '-f' == arg:
                 force = True
-    return WingSync.doSync(force, False)
+    return WingSync.doSync(force)
 
 
 if __name__ == "__main__":

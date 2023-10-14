@@ -13,6 +13,7 @@ from utils.utils_file import FileUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from framework.wing_env import WingEnv
+from basic.git import BasicGit
 
 ImportUtils.initEnv()
 
@@ -48,8 +49,8 @@ class WingGit:
                 ok = ''
                 continue
         LoggerUtils.printColorTexts(LoggerUtils.alignLine(project), LoggerUtils.GREEN,
-                                    branch, LoggerUtils.RED_GRAY,
-                                    ok, LoggerUtils.BLUE_GRAY
+                                    branch, LoggerUtils.BLUE_GRAY,
+                                    ok, LoggerUtils.RED_GRAY
                                     )
         if ok is None: LoggerUtils.println(ret)
 
@@ -57,6 +58,7 @@ class WingGit:
     def exeCmdToGits(cmd):
         projects = WingGit.getGitProjects()
         for project in projects:
+            LoggerUtils.light('\n' + project)
             try:
                 ret = WingGit.exeCmdToGit(project, cmd)
                 if 0 <= ret.find('error'):
@@ -127,8 +129,7 @@ class WingGit:
             if not b.startswith('*'): continue
             b = b[1:].strip()
             if b.startswith('(') or b.startswith('（'):  # (HEAD detached at tag-3.6.1)
-                pos = b.rfind(' ')
-                b = b[pos + 1:].strip()[:-1]
+                b = b[1:-1].split(' ')[-1]
             return b
         return ''
 
@@ -144,10 +145,18 @@ class WingGit:
         return False
 
     @staticmethod
-    def fetchBranch(project, branch, force, clean=False):
-        if branch.startswith("refs/tags/"):  # fetch tag, "refs/tags/tag-3.6.3"
-            return WingGit.fetchTag(project, branch[10:])
+    def fetchRemote(project, name, force, clean=False):
+        path = WingEnv.getSpacePath() + os.path.sep + project
+        git = BasicGit(path)
+        if git.isRemoteBranchExist(name):
+            return WingGit.doFetchBranch(project, name, force, clean)
+        if git.isRemoteTagExist(name):
+            return WingGit.doFetchTag(project, name)
+        assert 0, 'Not found %s in branches and tags' % name
 
+    @staticmethod
+    def doFetchBranch(project, branch, force, clean=False):
+        LoggerUtils.println('fetch branch: ' + branch)
         # LoggerUtils.println(project, branch, force, clean)
         if not WingGit.hasBranch(project, branch):
             ret = WingGit.exeCmdToGit(project, 'fetch origin %s:%s' % (branch, branch))
@@ -177,21 +186,21 @@ class WingGit:
         return WingGit.checkResult(ret)
 
     @staticmethod
-    def fetchTag(project, tag):
-        if WingGit.getCurrentBranch(project) == tag: return True
+    def doFetchTag(project, tag):
+        LoggerUtils.println('fetch tag: ' + tag)
+        if WingGit.hasBranch(project, tag):
+            WingGit.exeCmdToGit(project, 'checkout %s' % tag)
+            if WingGit.getCurrentBranch(project) != tag:
+                assert 0, 'Error: checkout tag fail 1, ' + tag + ' for ' + project
+            return True
 
-        ret = WingGit.exeCmdToGit(project, 'fetch origin %s' % tag)
+        ret = WingGit.exeCmdToGit(project, 'checkout tags/' + tag)
         LoggerUtils.println(ret)
         if ret is not None and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
-            assert 0, 'Error: fetch tag fail, ' + tag + ' for ' + project
-
-        ret = WingGit.exeCmdToGit(project, 'checkout %s' % tag)
-        LoggerUtils.println(ret)
-        if ret is not None and (0 <= ret.find('fatal') or 0 <= ret.find('error')):
-            assert 0, 'Error: checkout tag fail 1, ' + tag + ' for ' + project
+            assert 0, 'Error: checkout tag fail 2, ' + tag + ' for ' + project
 
         if WingGit.getCurrentBranch(project) != tag:
-            assert 0, 'Error: checkout tag fail 2, ' + tag + ' for ' + project
+            assert 0, 'Error: checkout tag fail 3, ' + tag + ' for ' + project
         return True
 
     @staticmethod
@@ -219,9 +228,9 @@ class WingGit:
         projExist = os.path.isdir(localPath)
         if projExist:
             rname = WingGit.getGitRemoteServerName(localPath)
-            if rname == None or rname == projectServer: return projExist
+            if rname is None or rname == projectServer: return projExist
             msg = 'file exist: ' + localPath
-            msg += ', remote git changed: %s -> %s' % (rname, projectServer)
+            msg += ', remote git changes: %s -> %s' % (rname, projectServer)
             msg += ', remove or backup, then try again'
             assert 0, msg
 
@@ -233,8 +242,10 @@ class WingGit:
             # git clone git@github.com:xxxxxx/${git lib name}
             # git clone git@codeup.aliyun.com.com:xxxxxx/${git lib name}
             # git clone ssh://xxxxxx@gerrit.xxx.com:2901/${git lib name}
-            CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
-            assert os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'), 'Make sure have correct access rights for ' + projectServer + ' !'
+            ret = CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
+            if not os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'):
+                LoggerUtils.println(ret)
+                assert 0, 'Make sure have correct access rights for ' + projectServer + ' !'
 
             pp = os.path.dirname(localPath)
             if not os.path.isdir(pp): os.makedirs(pp)
@@ -248,7 +259,7 @@ class WingGit:
 
     @staticmethod
     def getGitRemoteServerName(path):
-        s = CmnUtils.doCmd('cd %s && git remote -v' % (path))
+        s = CmnUtils.doCmd('cd %s && git remote -v' % path)
         ll = s.splitlines()
         for l in ll:
             pos = l.find('@')

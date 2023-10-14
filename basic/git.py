@@ -27,16 +27,19 @@ class BasicGit:
             b = b.strip()
             if not b.startswith('*'): continue
             b = b[1:].strip()
+            if b.startswith('(') or b.startswith('（'): b = b[1:-1].split(' ')[-1]
             return b
         return None
 
-    def isChanged(self):
+    def getStatus(self):
         ret = self.__doGitCmd__('status')
         for line in ret.split('\n'):
             line = line.strip()
             if CmnUtils.isEmpty(line): continue
-            if line.startswith('nothing to commit'): return False
-        return True
+            if 0 < line.find(' behind '): return -1, 'behind remote'
+            if 0 < line.find(' ahead '): return 1, 'ahead of remote'
+            if line.startswith('nothing to commit'): return 0, ''
+        return -2, 'changes'
 
     def getCurrentRemoteBranch(self):
         branches = self.__doGitCmd__('branch -vv')
@@ -108,7 +111,26 @@ class BasicGit:
             bbs.append(b[len('remotes/origin/'):])
         return bbs
 
+    def isRemoteBranchExist(self, name):
+        branch = self.__doGitCmd__('fetch origin ' + name)
+        if CmnUtils.isEmpty(branch) or 0 <= branch.find('fatal:'): return False
+        for line in branch.split('\n'):
+            line = line.strip()
+            if line.startswith('* branch') or line.startswith('branch'): return True
+        return False
+
+    def isRemoteTagExist(self, name):
+        tag = self.__doGitCmd__('fetch origin ' + name)
+        if CmnUtils.isEmpty(tag) or 0 <= tag.find('fatal:'): return False
+        for line in tag.split('\n'):
+            line = line.strip()
+            if line.startswith('* tag') or line.startswith('tag'): return True
+        return False
+
     def __doGitCmd__(self, subCmd, ast=False):
+        if not os.path.isdir(self.mGitPath):
+            return 'fatal: not a git repository (No such directory): .git'
+
         ret = CmnUtils.doCmd('cd %s && git %s' % (self.mGitPath, subCmd))
         if 0 <= ret.find('error:'):
             LoggerUtils.println(ret)
@@ -152,7 +174,7 @@ class BasicGit:
         currBranch = self.getCurrentBranch()
         assert currBranch == branch, 'Error: ' + currBranch + ' != ' + branch
         # self.setUpstream(currBranch)
-        self.__doGitCmd__('pull origin %s' % (branch), True)
+        self.__doGitCmd__('pull origin %s' % branch, True)
 
     def getVersion(self):
         ret = self.__doGitCmd__('--version')
@@ -182,23 +204,47 @@ class BasicGit:
         self.__doGitCmd__('branch --set-upstream-to=origin/%s %s' % (branch, branch))
 
     def pushToRemoteBranch(self, newBranch):
-        branches = self.getRemoteBranches()
-        assert None != branches and 0 < len(branches), 'Error: Invalid remote git server'
-        if newBranch in branches: return  # remote branch exist
-        self.__doGitCmd__('push origin HEAD:refs/heads/' + newBranch, True)
-        branches = self.getRemoteBranches()
-        assert newBranch in branches, 'Error: Remote branch create fail ' + newBranch
+        if self.isRemoteBranchExist(newBranch):
+            LoggerUtils.w('ignore: branch exist')
+            return
+        self.__doGitCmd__('checkout -b ' + newBranch, True)
+        self.__doGitCmd__('push origin ' + newBranch, True)
+        assert self.isRemoteBranchExist(newBranch), 'Error: Remote branch create fail ' + newBranch
+
+    def pushToRemoteTag(self, newTag, msg):
+        # git tag -a v1.0 -m 'version 1.0'
+        if self.isRemoteTagExist(newTag):
+            LoggerUtils.w('ignore: tag exist')
+            return
+        if CmnUtils.isEmpty(msg):
+            self.__doGitCmd__('tag ' + newTag, True)
+        else:
+            self.__doGitCmd__('tag -a %s -m "%s"' % (newTag, msg), True)
+        self.__doGitCmd__('push origin ' + newTag, True)
+        assert self.isRemoteTagExist(newTag), 'Error: Remote tag create fail ' + newTag
 
     def pushCodeToServer(self, branch):
-        branches = self.getRemoteBranches()
-        assert None != branches and 0 < len(branches), 'Error: Invalid remote git server'
-        assert branch in branches, 'remote branch not exist: ' + branch
+        assert self.isRemoteBranchExist(branch), 'remote branch not exist: ' + branch
         self.__doGitCmd__('push origin HEAD:refs/heads/' + branch, True)
         assert not self.isAheadOfRemote(), 'error: push fail'
 
-    def pushCodeToGerrit(self, branch):
+    def pushCodeToReview(self, branch):
+        assert self.isRemoteBranchExist(branch), 'remote branch not exist: ' + branch
         self.__doGitCmd__('push origin HEAD:refs/for/' + branch, True)
         # assert not self.isAheadOfRemote(), 'error: push fail'
+
+    def pushCommitToServer(self, branch, msg):
+        if not self.hasCommit():
+            LoggerUtils.w("ignore: nothing to commit")
+            return
+        self.__doGitCmd__('add .')
+        self.__doGitCmd__('commit -m "%s"' % msg)
+        self.pushCodeToServer(branch)
+        assert not self.hasCommit(), 'Commit fail'
+
+    def hasCommit(self):
+        ret = self.__doGitCmd__('status')
+        return ret.find('nothing to commit') < 0
 
     def println(self):
         LoggerUtils.println('Branches:', self.getBranches())

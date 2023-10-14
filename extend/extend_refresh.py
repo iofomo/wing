@@ -39,7 +39,7 @@ class DocumentCollector:
     def __doCollectDoc__(self, fsrc):
         path = self.mSpacePath + '/doc'
         if not os.path.isdir(path): return
-        LoggerUtils.light('refresh: doc ...')
+        LoggerUtils.printColorTexts('refresh: doc ...', LoggerUtils.BLUE_GRAY)
 
         '''
         # 开发组文档（doc）
@@ -70,7 +70,7 @@ class DocumentCollector:
     def __doCollectPlatformDoc__(self, fsrc):
         path = self.mSpacePath + '/platform/doc'
         if not os.path.isdir(path): return
-        LoggerUtils.light('refresh: platform/doc ...')
+        LoggerUtils.printColorTexts('refresh: platform/doc ...', LoggerUtils.BLUE_GRAY)
 
         '''
         # 平台组文档（doc）
@@ -97,7 +97,7 @@ class DocumentCollector:
                 self.__doCollectItem__(path, filename[len(path) + 1:])
 
     def __doCollectModuleDoc__(self, fsrc):
-        LoggerUtils.light('refresh: module/doc ...')
+        LoggerUtils.printColorTexts('refresh: module/doc ...', LoggerUtils.BLUE_GRAY)
         self.__do_write__(fsrc, Resource.getString(2) + '\n\n')
 
         '''
@@ -202,7 +202,7 @@ class DocumentCollector:
 
 def doRefreshPermit(spacePath):
     # add x right to the file
-    LoggerUtils.light('refresh: *.sh, gradlew rights ...')
+    LoggerUtils.printColorTexts('refresh: *.sh, gradlew rights ...', LoggerUtils.BLUE_GRAY)
 
     def scanPath(path, level):
         # 获取该目录下所有的文件名称和目录名称
@@ -224,7 +224,7 @@ def doRefreshGradle(spacePath):
     gf = spacePath + '/default.gradle'
     if not os.path.isfile(gf): return
 
-    LoggerUtils.light('refresh: default.gradle ...')
+    LoggerUtils.printColorTexts('refresh: default.gradle ...', LoggerUtils.BLUE_GRAY)
     ppath = os.path.dirname(g_wing_path)
     mvnusr = PropertiesUtils.get(ppath + '/wing.properties', 'mvnusr')
     mvnpwd = PropertiesUtils.get(ppath + '/wing.properties', 'mvnpwd')
@@ -290,7 +290,7 @@ def doFixCMakelist(spacePath, mf):
     cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
     cplatform = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "platform")
     if CmnUtils.isEmpty(cname) or CmnUtils.isEmpty(cplatform): return
-    LoggerUtils.light('refresh: CMakeLists.txt ' + cname)
+    LoggerUtils.printColorTexts('refresh: CMakeLists.txt ' + cname, LoggerUtils.BLUE_GRAY)
 
     if 'android' != cplatform: return  # only for Android
     if 'ANDROID_HOME' not in os.environ: return  # make sure env right
@@ -322,7 +322,7 @@ def doFixCMakelist(spacePath, mf):
 def doRefreshCMakelist(spacePath, mf):
     cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
     if CmnUtils.isEmpty(cname): return
-    LoggerUtils.light('refresh: CMakeLists.txt ' + cname)
+    LoggerUtils.printColorTexts('refresh: CMakeLists.txt ' + cname, LoggerUtils.BLUE_GRAY)
 
     isAndroid = cname.endswith('a')
 
@@ -355,7 +355,7 @@ def doRefreshCMakelist(spacePath, mf):
             if subGroup != lastSubGroup:
                 lastSubGroup = subGroup
                 f.writelines('\n# %s\n' % subGroup)
-                LoggerUtils.light(subGroup)
+                LoggerUtils.printColorTexts(subGroup, LoggerUtils.BLUE_GRAY)
 
             if not isAndroid and outFile.endswith('ifma'): continue
             LoggerUtils.println('add: ' + outFile)

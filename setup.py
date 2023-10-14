@@ -57,7 +57,7 @@ def getWingVer():
     return None
 
 def printInfo():
-    print('         ' + setup_config['name'])
+    print('\n         ' + setup_config['name'])
     ver = getWingVer()
     if not CmnUtils.isEmpty(ver): print('version: ' + ver)
     print(' author: ' + setup_config['author'])
@@ -71,9 +71,9 @@ def doInstall():
     try:
         if os.path.isdir(g_wing_path): shutil.rmtree(g_wing_path)
         shutil.copytree(g_this_path, g_wing_path)
-        if os.path.isdir(g_wing_path + os.sep + '.git'): shutil.rmtree(g_wing_path + os.sep + '.git')
+        # if os.path.isdir(g_wing_path + os.sep + '.git'): shutil.rmtree(g_wing_path + os.sep + '.git')
         if os.path.isdir(g_wing_path + os.sep + '.idea'): shutil.rmtree(g_wing_path + os.sep + '.idea')
-        LoggerUtils.println('copy bin')
+        LoggerUtils.println('copy bins ...')
         if CmnUtils.isOsWindows():
             shutil.copyfile(g_this_path + os.sep + 'wing.py', g_bin_path + os.sep + 'wing.py')
             shutil.copyfile(g_this_path + os.sep + 'wing.bat', g_bin_path + os.sep + 'wing.bat')
@@ -82,7 +82,7 @@ def doInstall():
             CmnUtils.doCmd('chmod a+x %s ' % (g_bin_path + os.sep + 'wing'))
 
         printInfo()
-        LoggerUtils.light(' success.')
+        LoggerUtils.light('\n done.')
         return
     except Exception as e:
         print(e)
@@ -92,7 +92,7 @@ def doInstall():
 
 def doUninstall():
     doClean()
-    print('done.')
+    print('\ndone.')
 
 
 setup_config = {
