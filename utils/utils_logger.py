@@ -144,7 +144,6 @@ class LoggerUtils:
         if isinstance(txt, str): return True
         if sys.version_info.major < 3:
             try:
-                import unicode
                 if isinstance(txt, unicode): return True
             except Exception as e:
                 pass
@@ -162,6 +161,7 @@ class LoggerUtils:
 
     @staticmethod
     def hexdump(s):
+        if s is None: return
         hex_string = binascii.hexlify(s)
         hex_groups = [hex_string[i:i + 32] for i in range(0, len(hex_string), 32)]
         ascii_groups = [s[i:i + 16] for i in range(0, len(s), 16)]

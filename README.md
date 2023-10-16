@@ -2,7 +2,7 @@
 
 ### 导航
 
--   [开始使用](doc/get-start-cn.md)
+-   [新手使用](doc/get-start-cn.md)
 -   [详细指南](doc/user-guide-cn.md)
 
 ### 说明
@@ -17,7 +17,7 @@
 
 ### 快速开始
 
->详细操作看 [这里](doc/get-start-cn.md)
+>新手操作看 [这里](doc/get-start-cn.md)
 
 ##### 安装
 
