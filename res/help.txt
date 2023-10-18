@@ -35,6 +35,13 @@
                 print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
             hash {string}
                 print md5/sha256/hash/... of string
+        -adb {type}
+            top
+                print top windows info from Android device
+            pull {package name}
+                pull target apk from Android device
+            dump
+                get all running services and log info from Android device
 
     wing project commands:
        -create [type name]

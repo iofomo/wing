@@ -26,11 +26,11 @@ C:\Users\\${user name}\bin
 
 将`C:\Users\${user name}\bin`添加至系统环境变量
 
-![](get-start.assets/WX20230716-122736.png)
+![](get-start.assets/10.png)
 
-![](get-start.assets/WX20230726-214343@2x.png)
+![](get-start.assets/12.png)
 
-![](get-start.assets/WX20230716-122804.png)
+![](get-start.assets/11.png)
 
 **Linux/MacOS：**
 
