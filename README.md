@@ -1,4 +1,4 @@
-<img src="doc/README.assets/1.png" style="zoom:50%;" />
+<img src="doc/README.assets/1.png" />
 
 ### 导航
 

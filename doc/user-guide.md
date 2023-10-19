@@ -19,9 +19,12 @@ $ wing -help
 ##### 配置工作空间
 
 >-space add {name} {host} [manifest]
->        Config space host information
+>
+>   Config space host information
+>
 >-space
->        Print all the spcase information
+>
+>   Print all the spcase information
 
 ```shell
 # 本地索引模式
@@ -43,9 +46,12 @@ $ wing -space
 ##### 获取代码
 
 >init {workspace name} {branch or tag name} {manifest name}
->        Create wing-space, such as:
->        wing init workspace1 develop dev.xml
->        wing init workspace2 tag_1.0 release.xml
+>
+>   Create wing-space, such as:
+>
+>   wing init workspace1 develop dev.xml
+>
+>   wing init workspace2 tag_1.0 release.xml
 
 ```shell
 $ wing init test master admin.xml
@@ -56,7 +62,8 @@ $ wing init test master admin.xml
 同步代码组各git库代码：
 
 >sync [f] sync code from remote from manifests
->    f:  Force switch to new branch, discard all local changes
+>
+>f:  Force switch to new branch, discard all local changes
 
 ```shell
 # 安全同步，同步失败不做处理，当前分支和索引不一致不同步
@@ -68,11 +75,16 @@ $ wing sync f
 ##### 属性命令
 
 >   -prop {s/set} {key} [value]
->        Set key and value to wing property
+>
+>   ​    Set key and value to wing property
+>
 >   -prop {g/get} {key}
->        Get value from wing property
+>
+>   ​    Get value from wing property
+>
 >   -prop
->        Print all wing properties
+>
+>   ​    Print all wing properties
 
 ```shell
 # set
@@ -122,7 +134,8 @@ server/homesite                                 main (no changes)
 ##### 提交代码
 
 >-push [f] Push code to remote
->     f   Directly push to the remote end without code review
+>
+>f   Directly push to the remote end without code review
 
 ```shell
 # 提交代码至当前分支所在的远程分支，之后需要在Gerrit上进行Code-Review确认后才能入库
@@ -141,7 +154,8 @@ $ wing -push f
 基于某一原分支创建新分支。
 
 >-create b {new branch name} {base branch name}
->         Create a new branch from the base or current branch
+>
+>​    Create a new branch from the base or current branch
 
 ```shell
 $ wing -create b release_1.0 main
@@ -152,7 +166,8 @@ $ wing -create b release_1.0 main
 基于某一分支创建新`tag`。
 
 >-create  t {new tag name} {base branch name} [tag message]
->         Create a new tag from the base or current branch
+>
+>​    Create a new tag from the base or current branch
 
 ```shell
 $ wing -create t tag_v1.0 main
@@ -163,7 +178,8 @@ $ wing -create t tag_v1.0 main
 将工作空间的代码库整体切换到指定的分支
 
 >-switch b {branch name}
->         Switch all git libraries in the workspace to the target branch
+>
+>​    Switch all git libraries in the workspace to the target branch
 
 ```shell
 $ wing -switch b release_1.0
@@ -174,7 +190,8 @@ $ wing -switch b release_1.0
 将工作空间的代码库整体切换到指定的`tag`
 
 >-switch t {tag name}
->         Switch all git libraries in the workspace to the target tag
+>
+>​    Switch all git libraries in the workspace to the target tag
 
 ```shell
 $ wing -switch t tag_v1.0
@@ -185,6 +202,8 @@ $ wing -switch t tag_v1.0
 ##### `tree`工具
 
 >-tree [l] Print directory structure
+>
+>​    l  level of file directory depth
 
 ```shell
 $ wing -tree
@@ -200,7 +219,8 @@ $ wing -tree
 **创建`RSA`密钥：**
 
 >-key create {key type} {mode}
->        create RSA public and private keys with 1024 or 2048(default) mode
+>
+>   create RSA public and private keys with 1024 or 2048(default) mode
 
 ```shell
 $ wing -key create rsa 2048
@@ -209,7 +229,8 @@ $ wing -key create rsa 2048
 **查看密钥：**
 
 >-key list {file} [pwd]
->            print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
+>
+>​       print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
 
 ```shell
 #【Android】查看安装包文件的签名信息
@@ -230,7 +251,8 @@ $ wing -key list embedded.mobileprovision
 **计算`hash`：**
 
 >-key hash {file}
->            print md5/sha256/hash/... of file
+>
+>​       print md5/sha256/hash/... of file
 
 ```shell
 $ wing -key hash /Users/xxx/test.txt
@@ -243,15 +265,24 @@ $ wing -key hash /Users/xxx/test.txt
 获取顶层信息，确保手机连接正常，获取顶层的Activity和Window应用信息
 
 >-adb top
->        Get top visible apps information
->    pull {package name}
->        Get apk file of APP
->    stop {package name}
->        Kill running APP
->    clear {package name}
->        Clear the data of APP
->    dump
->        Dump all service and log information from device
+>
+>   Get top visible apps information
+>
+>pull {package name}
+>
+>   Get apk file of APP
+>
+>stop {package name}
+>
+>   Kill running APP
+>
+>clear {package name}
+>
+>   Clear the data of APP
+>
+>dump
+>
+>   Dump all service and log information from device
 
 ```shell
 $ wing -adb top
@@ -265,7 +296,8 @@ $ wing -adb top
 **获取安装包应用：**
 
 >-adb pull {package name}
->        Get apk file of APP
+>
+>   Get apk file of APP
 
 获取指定包名的应用安装包文件（系统预装的应用apk无dex），导出到当前目录下
 
@@ -280,7 +312,8 @@ $ wing -adb pull com.demo
 **停止应用：**
 
 >-adb stop {package name}
->        Kill running APP
+>
+>   Kill running APP
 
 ```shell
 $ wing -adb stop com.demo
@@ -289,7 +322,8 @@ $ wing -adb stop com.demo
 **清除应用数据：**
 
 >-adb clear {package name}
->        Clear the data of APP
+>
+>   Clear the data of APP
 
 ```shell
 $ wing -adb clear com.demo
@@ -298,7 +332,8 @@ $ wing -adb clear com.demo
 **设备信息采集：**
 
 >-adb dump
->        Dump all service and log information from device
+>
+>   Dump all service and log information from device
 
 ```shell
 $ wing -adb dump
@@ -311,8 +346,10 @@ $ wing -adb dump
 在某一工程目录下任意位置，执行如下命令（该工程已实现编译入口：`mk.py`），可以编译该工程：
 
 >-build [r/d] Execute mk.py file in the project directory
->        r   release build
->        d   debug build
+>
+>   r   release build
+>
+>   d   debug build
 
 ```shell
 # 编译调试和发布版本，编译结果输出目录：/xxx/out/xxx/debug/和/xxx/out/xxx/release/
@@ -330,24 +367,42 @@ $ wing -build r
 创建开发工程（在工作空间任意位置，执行如下命令，可以一键创建开发工程）
 
 >-create [type name]
->        pc {name}
->            Create an empty project from the template project of the Python gui client
->        pp {name}
->            Create an empty project from the template project of the Python publish
->        ap {name} {module name}
->            Create an empty project from the template project of the Android
->        anp {name} {module name}
->            Create an empty project from the template project of the Android with native
->        ip {name} {module name}
->            Create an empty project from the template project of the iOS
->        jp {name} {module name}
->            Create an empty project from the template project of the Java
->        cp {name}
->            Create an empty project from the template project of the C/C++
->        gp {name}
->            Create an empty project from the template project of the Go
->        fp {name}
->            Create an empty project from the template project of the Flutter
+>
+>   pc {name}
+>
+>​       Create an empty project from the template project of the Python gui client
+>
+>   pp {name}
+>
+>​       Create an empty project from the template project of the Python publish
+>
+>   ap {name} {module name}
+>
+>​       Create an empty project from the template project of the Android
+>
+>   anp {name} {module name}
+>
+>​       Create an empty project from the template project of the Android with native
+>
+>   ip {name} {module name}
+>
+>​       Create an empty project from the template project of the iOS
+>
+>   jp {name} {module name}
+>
+>​       Create an empty project from the template project of the Java
+>
+>   cp {name}
+>
+>​       Create an empty project from the template project of the C/C++
+>
+>   gp {name}
+>
+>​       Create an empty project from the template project of the Go
+>
+>   fp {name}
+>
+>​       Create an empty project from the template project of the Flutter
 
 ```shell
 # 创建Python client gui工程：

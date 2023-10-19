@@ -20,7 +20,7 @@
 
 以下为本项目的代码目录简要说明，工程比较简单便于大家快速上手。
 
-![](develop-guide.assets/102.png)
+<img src="develop-guide.assets/102.png" style="zoom:70%;" />
 
 ### 使用规范
 
