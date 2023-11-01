@@ -28,11 +28,24 @@ def __getProjectPath__(chkFile):
     return WingEnv.getSpacePath()
 
 
+def doCreate(argv):
+    projPath = __getProjectPath__('.git/config')
+    succ = CmnUtils.doCmdCall('cd %s && python extend/extend_creator.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
+    assert succ, 'Create fail'
+    LoggerUtils.light('done.')
+
+
 def doBuild(argv):
     projPath = __getProjectPath__('mk.py')
     succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_build.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
     assert succ, 'Build fail'
     LoggerUtils.light('\ndone.')
+
+
+def doPublish(argv):
+    succ = CmnUtils.doCmdCall('cd %s && python extend/extend_publish.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+    assert succ, 'Publish fail'
+    LoggerUtils.light('done.')
 
 
 def doClean(argv):
@@ -155,6 +168,7 @@ def run(_argv):
     if '-refresh' == typ: return doRefresh(argv)
     if '-adb' == typ: return doADB(argv)
     if '-switch' == typ: return doSwitch(argv)
+    if '-publish' == typ: return doPublish(argv)
     # if '-project' == typ: return doProject(argv)
 
     if '-prop' == typ: return doProperty(argv)

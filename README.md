@@ -1,5 +1,7 @@
 <img src="doc/README.assets/1.png" />
 
+<img src="doc/README.assets/4.png" style="zoom: 50%;" /> 
+
 ### 导航
 
 -   [新手使用](doc/get-start.md)

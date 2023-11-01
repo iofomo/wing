@@ -76,15 +76,15 @@ $ wing sync f
 
 >   -prop {s/set} {key} [value]
 >
->   ​    Set key and value to wing property
+>       Set key and value to wing property
 >
 >   -prop {g/get} {key}
 >
->   ​    Get value from wing property
+>       Get value from wing property
 >
 >   -prop
 >
->   ​    Print all wing properties
+>       Print all wing properties
 
 ```shell
 # set
@@ -155,7 +155,7 @@ $ wing -push f
 
 >-create b {new branch name} {base branch name}
 >
->​    Create a new branch from the base or current branch
+>    Create a new branch from the base or current branch
 
 ```shell
 $ wing -create b release_1.0 main
@@ -167,7 +167,7 @@ $ wing -create b release_1.0 main
 
 >-create  t {new tag name} {base branch name} [tag message]
 >
->​    Create a new tag from the base or current branch
+>    Create a new tag from the base or current branch
 
 ```shell
 $ wing -create t tag_v1.0 main
@@ -179,7 +179,7 @@ $ wing -create t tag_v1.0 main
 
 >-switch b {branch name}
 >
->​    Switch all git libraries in the workspace to the target branch
+>    Switch all git libraries in the workspace to the target branch
 
 ```shell
 $ wing -switch b release_1.0
@@ -191,7 +191,7 @@ $ wing -switch b release_1.0
 
 >-switch t {tag name}
 >
->​    Switch all git libraries in the workspace to the target tag
+>    Switch all git libraries in the workspace to the target tag
 
 ```shell
 $ wing -switch t tag_v1.0
@@ -203,7 +203,7 @@ $ wing -switch t tag_v1.0
 
 >-tree [l] Print directory structure
 >
->​    l  level of file directory depth
+>    l  level of file directory depth
 
 ```shell
 $ wing -tree
@@ -230,7 +230,7 @@ $ wing -key create rsa 2048
 
 >-key list {file} [pwd]
 >
->​       print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
+>       print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
 
 ```shell
 #【Android】查看安装包文件的签名信息
@@ -252,7 +252,7 @@ $ wing -key list embedded.mobileprovision
 
 >-key hash {file}
 >
->​       print md5/sha256/hash/... of file
+>       print md5/sha256/hash/... of file
 
 ```shell
 $ wing -key hash /Users/xxx/test.txt
@@ -370,39 +370,39 @@ $ wing -build r
 >
 >   pc {name}
 >
->​       Create an empty project from the template project of the Python gui client
+>       Create an empty project from the template project of the Python gui client
 >
 >   pp {name}
 >
->​       Create an empty project from the template project of the Python publish
+>       Create an empty project from the template project of the Python publish
 >
 >   ap {name} {module name}
 >
->​       Create an empty project from the template project of the Android
+>       Create an empty project from the template project of the Android
 >
 >   anp {name} {module name}
 >
->​       Create an empty project from the template project of the Android with native
+>       Create an empty project from the template project of the Android with native
 >
 >   ip {name} {module name}
 >
->​       Create an empty project from the template project of the iOS
+>       Create an empty project from the template project of the iOS
 >
 >   jp {name} {module name}
 >
->​       Create an empty project from the template project of the Java
+>       Create an empty project from the template project of the Java
 >
 >   cp {name}
 >
->​       Create an empty project from the template project of the C/C++
+>       Create an empty project from the template project of the C/C++
 >
 >   gp {name}
 >
->​       Create an empty project from the template project of the Go
+>       Create an empty project from the template project of the Go
 >
 >   fp {name}
 >
->​       Create an empty project from the template project of the Flutter
+>       Create an empty project from the template project of the Flutter
 
 ```shell
 # 创建Python client gui工程：
