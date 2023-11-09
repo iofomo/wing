@@ -1,6 +1,13 @@
-<img src="doc/README.assets/1.png" />
+<p align="center">
+  <a href="#">
+    <img alt="wing" src="doc/README.assets/1.png" width="300" />
+  </a>
+</p>
 
-<img src="doc/README.assets/4.png" style="zoom: 50%;" /> 
+<p align="center">
+    <img src="doc/README.assets/license-mit.svg" alt="license:MIT" />
+    <img src="doc/README.assets/python-2x3x.svg" alt="python:2x3x" />
+</p>
 
 ### 导航
 

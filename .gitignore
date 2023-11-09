@@ -1,4 +1,5 @@
 venv
+plugin
 .idea
 .DS_Store
 */.DS_Store

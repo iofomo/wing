@@ -4,6 +4,8 @@
 # @date:   2023.08.10 14:40:50
 
 import os, sys, tempfile, subprocess, threading
+import platform
+
 from utils.utils_logger import LoggerUtils
 
 OS_PLATFORM_LINUX = 0
@@ -42,6 +44,40 @@ class CmnUtils:
     @staticmethod
     def isOsMac():
         return OS_PLATFORM_MAC == CmnUtils.getPlatform()
+
+    @staticmethod
+    def isX86_32():
+        return CmnUtils.isX86() and CmnUtils.is32BitOS()
+
+    @staticmethod
+    def isX86_64():
+        return CmnUtils.isX86() and CmnUtils.is64BitOS()
+
+    @staticmethod
+    def isArm32():
+        return CmnUtils.isArm() and CmnUtils.is32BitOS()
+
+    @staticmethod
+    def isArm64():
+        return CmnUtils.isArm() and CmnUtils.is64BitOS()
+
+    @staticmethod
+    def isX86():
+        bit = platform.architecture()[0]
+        return 0 <= bit.find('x86')
+
+    @staticmethod
+    def isArm():
+        bit = platform.architecture()[0]
+        return bit.find('x86') < 0
+
+    @staticmethod
+    def is64BitOS():
+        return 0 <= platform.machine().find('64')
+
+    @staticmethod
+    def is32BitOS():
+        return platform.machine().find('64') < 0
 
     @staticmethod
     def getOSUserPath():
