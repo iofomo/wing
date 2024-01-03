@@ -33,7 +33,7 @@
 
 ### 快速开始
 
->新手操作看 [这里](doc/get-start-cn.md)
+>新手操作看 [这里](doc/get-start.md)
 
 ##### 安装
 
