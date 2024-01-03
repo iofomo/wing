@@ -27,7 +27,9 @@
                 Switch all git libraries in the workspace to the target tag
 
     wing tool commands
-        -tree [l] Print directory structure
+        -tree [level] [l] Print directory structure
+            level: max level print, default print all
+            l: print line
         -key {type}
             create {key type} {mode}
                 create RSA public and private keys with 1024 or 2048(default) mode
@@ -40,7 +42,7 @@
                 print top windows info from Android device
             pull {package name}
                 pull target apk from Android device
-            dump
+            dump {ui/sys/log}
                 get all running services and log info from Android device
 
     wing project commands:

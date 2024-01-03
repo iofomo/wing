@@ -17,6 +17,7 @@ from basic.git import BasicGit
 from basic.space import BasicSpace
 from basic.arguments import BasicArgumentsValue
 from extend.extend_base import ExtendBase
+from framework.wing_env import WingEnv
 
 g_wing_path = ImportUtils.initEnv()
 
@@ -69,7 +70,7 @@ class ExtendBranch(ExtendBase):
         pname = project.getPath()
         projPath = self.mBaseSpacePath + os.sep + pname
         if len(self.mResults) <= 0:
-            self.parseBranch(g_wing_path, '.wing/wing')
+            # self.parseBranch(g_wing_path, '.wing/wing')
             manifestsPath = self.mBaseSpacePath + os.sep + '.wing/manifests'
             if isGitManifest(manifestsPath):
                 self.parseBranch(manifestsPath, '.wing/manifests', space.getBranch())
@@ -185,8 +186,10 @@ def doUpdateManifest(spacePath, baseBranch, newBranch):
                             branch = l[:pos]
                             line = line.replace('"' + branch + '"', '"' + newBranch + '"')
                         ff.write(line)
+                LoggerUtils.println("update: " + f)
 
         BasicGit(path).pushCommitToServer(newBranch, "create %s from %s" % (baseBranch, newBranch))
+        LoggerUtils.println("push manifests to remote")
     except Exception as e:
         LoggerUtils.exception(e)
         assert 0
@@ -207,7 +210,7 @@ def doCreateTag(spacePath, project, baseBranch, newTag, msg):
     git.pushToRemoteTag(newTag, msg)
 
 
-def doCreateBranches(spacePath, baseBranch, newBranch):
+def doCreateBranches(envPath, spacePath, baseBranch, newBranch):
     space = BasicSpace(spacePath)
     # space.println()
     projects = space.getManifestProjects()
@@ -220,12 +223,15 @@ def doCreateBranches(spacePath, baseBranch, newBranch):
         doCreateBranch(spacePath, project.getPath(), baseBranch, newBranch)
 
     if isGitManifest(spacePath + os.sep + '.wing/manifests'):
+        LoggerUtils.println("do update manifests")
         # do to manifest
         git = doCreateBranch(spacePath, '.wing/manifests', baseBranch, newBranch)
         git.fetchBranch(newBranch, False)
         # update manifest
         doUpdateManifest(spacePath, baseBranch, newBranch)
-        git.fetchBranch(baseBranch, False)
+        WingEnv.init(spacePath, envPath)
+        WingEnv.setSpaceBranch(newBranch)
+        LoggerUtils.light("Space is " + newBranch + " now !")
 
 
 def doCreateTages(spacePath, baseBranch, newTag, msg):
@@ -251,14 +257,14 @@ def doFlush(spacePath, baseBranch, newBranch):
     with open(path + '/build-info.txt', 'w') as f: f.write(baseBranch + ',' + newBranch)
 
 
-def createTag(spacePath, baseBranch, newTag, msg):
+def createTag(spacePath, newTag, baseBranch, msg):
     LoggerUtils.light('Create workspace tag: ' + baseBranch + ' -> ' + newTag)
     doCreateTages(spacePath, baseBranch, newTag, msg)
 
 
-def createBranch(spacePath, baseBranch, newBranch):
+def createBranch(envPath, spacePath, newBranch, baseBranch):
     LoggerUtils.light('Create workspace branch: ' + baseBranch + ' -> ' + newBranch)
-    doCreateBranches(spacePath, baseBranch, newBranch)
+    doCreateBranches(envPath, spacePath, baseBranch, newBranch)
     doFlush(spacePath, baseBranch, newBranch)
 
 
@@ -283,7 +289,7 @@ def run():
         if arg == 't':
             createTag(spacePath, argv.get(5), argv.get(6), argv.get(7))
         elif arg == 'b':
-            createBranch(spacePath, argv.get(5), argv.get(6))
+            createBranch(envPath, spacePath, argv.get(5), argv.get(6))
         return
     if '-status' == cmd:
         results = []

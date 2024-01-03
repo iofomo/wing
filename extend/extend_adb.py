@@ -12,6 +12,7 @@ g_this_path = os.path.dirname(g_this_file)
 sys.path.append(os.path.dirname(g_this_path))
 
 from utils.utils_cmn import CmnUtils
+from utils.utils_cmn import CmnProcess
 from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from utils.utils_file import FileUtils
@@ -75,8 +76,11 @@ def doDumpLogger(path):
         CmnUtils.doCmd2File('adb logcat -v threadtime', outFile)
 
     outFile = path + '/log.txt'
-    thd = CmnUtils.runThread(doDumpLoggerImpl, outFile, False)
-    time.sleep(5)
+    proc = CmnProcess(doDumpLoggerImpl)
+    proc.start(outFile)
+    LoggerUtils.println('Wait for 3 seconds ...')
+    time.sleep(3)
+    proc.terminate()
     LoggerUtils.light('>>> ' + outFile)
 
 

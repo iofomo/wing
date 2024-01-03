@@ -79,10 +79,15 @@ class WingSync:
         group = mh.getGroup()
         projects = mh.getProjects()
         for project in projects:
-            if targetRemote is None:
+            if CmnUtils.isEmpty(targetRemote):
                 WingSync.do_sync_project(project, group, force)
-            else:
-                WingSync.do_switch_project(project, group, targetRemote)
+                continue
+            if not force:
+                revision = project.getRevision()
+                if not CmnUtils.isEmpty(revision):
+                    WingSync.do_switch_project(project, group, revision)
+                    continue
+            WingSync.do_switch_project(project, group, targetRemote)
 
         CmnUtils.doCmd('chmod a+x %s/* ' % WingEnv.getSpacePath())
         doRefresh()

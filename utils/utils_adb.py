@@ -9,22 +9,80 @@
 
 import sys, os
 
+g_this_file = os.path.realpath(sys.argv[0])
+g_this_path = os.path.dirname(g_this_file)
+
 from utils.utils_import import ImportUtils
 from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
+from utils.utils_net import NetUtils
+from utils.utils_zip import ZipUtils
 from utils.utils_logger import LoggerUtils
 
 ImportUtils.initEnv()
 
-
+BASE_URL_FMT = 'http://www.iofomo.com/download/adb/adb-%s'
 # --------------------------------------------------------------------------------------------------------------------------
 class AdbUtils:
 
+    g_adb_env_status = 0
+
+    @staticmethod
+    def getFileName():
+        if CmnUtils.isOsWindows(): return 'win-x64.zip'
+        if CmnUtils.isOsMac(): return 'mac-x64.dmg'
+        return 'linux-x64.zip'
+
+    @staticmethod
+    def ensureEnv():
+        if AdbUtils.isADBActive(): return
+        binFile = AdbUtils.getAdbBinFile()
+
+        # download
+        LoggerUtils.println('download adb ...')
+        url = BASE_URL_FMT % AdbUtils.getFileName()
+        try:
+            zPath = os.path.dirname(g_this_path) + '/plugin'
+            if not os.path.exists(zPath): os.makedirs(zPath)
+            zFile = zPath + os.sep + AdbUtils.getFileName()
+            NetUtils.downloadFileWithProgress(url, zFile)
+            LoggerUtils.println('download success')
+        except Exception as e:
+            print(e)
+            return None
+
+        ZipUtils.unzip(zFile, os.path.dirname(binFile))
+        if os.path.isfile(binFile): return binFile
+        LoggerUtils.e('invalid adb file')
+        return None
+
+    @classmethod
+    def doAdbCmd(cls, cmd):
+        if not AdbUtils.isADBActive(): return ''
+        if 1 < cls.g_adb_env_status:
+            adbFile = AdbUtils.getAdbBinFile()
+            return CmnUtils.doCmd(('%s ' % adbFile) + cmd)
+        return CmnUtils.doCmd('adb ' + cmd)
+
+    @classmethod
+    def isADBActive(cls):
+        if 0 == cls.g_adb_env_status:
+            ret, err = CmnUtils.doCmdEx('adb --version')
+            if not CmnUtils.isEmpty(ret) and 0 <= ret.find('Version'):
+                cls.g_adb_env_status = 1
+            elif os.path.isfile(AdbUtils.getAdbBinFile()):
+                cls.g_adb_env_status = 2
+        return 0 < cls.g_adb_env_status
+
+    @staticmethod
+    def getAdbBinFile():
+        return os.path.dirname(g_this_path) + '/plugin/adb/adb' + CmnUtils.getOsStuffix()
+
     @staticmethod
     def getFileTimestamp(f):
-        cmd = 'adb shell date +%s -r "' + f + '"'
+        cmd = 'shell date +%s -r "' + f + '"'
         try:
-            ret = CmnUtils.doCmd(cmd)
+            ret = AdbUtils.doAdbCmd(cmd)
             if None == ret: return 0
             LoggerUtils.println(ret)
             ret = ret.strip()
@@ -35,6 +93,18 @@ class AdbUtils:
         return 0
 
     @staticmethod
+    def getDevices():
+        ret = AdbUtils.doAdbCmd('devices')
+        items = ret.split('\n')
+
+        devices = []
+        for item in items:
+            item = item.strip()
+            if CmnUtils.isEmpty(item) or not item.endswith('device'): continue
+            devices.append(item.split('\t')[0])
+        return devices
+
+    @staticmethod
     def pull(src, des):
         des1 = os.path.abspath(des)
         ts1 = ts2 = 0
@@ -42,7 +112,7 @@ class AdbUtils:
         des2 = des1 + os.sep + os.path.basename(src)
         if os.path.exists(des2): ts2 = FileUtils.getModifyTime(des2)
 
-        CmnUtils.doCmd('adb pull "%s" "%s"' % (src, des1))
+        AdbUtils.doAdbCmd('pull "%s" "%s"' % (src, des1))
         tsNew = FileUtils.getModifyTime(des1)
         if 0 != tsNew and ts1 < tsNew: return True
         tsNew = FileUtils.getModifyTime(des2)
@@ -56,7 +126,7 @@ class AdbUtils:
         des2 = des + os.sep + os.path.basename(src)
         ts2 = AdbUtils.getFileTimestamp(des2)
 
-        CmnUtils.doCmd('adb push "%s" "%s"' % (src, des))
+        AdbUtils.doAdbCmd('push "%s" "%s"' % (src, des))
         tsNew = AdbUtils.getFileTimestamp(des)
         if 0 != tsNew and ts1 <= tsNew: return True
         tsNew = AdbUtils.getFileTimestamp(des2)
@@ -66,24 +136,24 @@ class AdbUtils:
     @staticmethod
     def stop(pkg):
         print('stop: ' + pkg)
-        ret = CmnUtils.doCmd('adb shell am force-stop %s' % pkg)
+        ret = AdbUtils.doAdbCmd('shell am force-stop %s' % pkg)
         print(ret)
 
     @staticmethod
     def clear(pkg):
         print('clear: ' + pkg)
-        ret = CmnUtils.doCmd('adb shell pm clear %s' % pkg)
+        ret = AdbUtils.doAdbCmd('shell pm clear %s' % pkg)
         print(ret)
 
     @staticmethod
     def getApkFile(pkgName):
         while True:
-            ret = CmnUtils.doCmd('adb shell pm path %s' % pkgName)
+            ret = AdbUtils.doAdbCmd('shell pm path %s' % pkgName)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
                     return ret[len('package:'):]
-            ret = CmnUtils.doCmd('adb shell pm path --user 0 %s' % pkgName)
+            ret = AdbUtils.doAdbCmd('shell pm path --user 0 %s' % pkgName)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
@@ -99,51 +169,51 @@ class AdbUtils:
 
     @staticmethod
     def install(apkFile):
-        ret = CmnUtils.doCmd('adb install -r "%s"' % apkFile)
+        ret = AdbUtils.doAdbCmd('install -r "%s"' % apkFile)
         if None == ret: return False
         return 0 <= ret.lower().find('success')
 
     @staticmethod
     def uninstall(pkgName):
         ins = AdbUtils.isInstalled(pkgName)
-        ret = CmnUtils.doCmd('adb uninstall "%s"' % pkgName)
+        ret = AdbUtils.doAdbCmd('uninstall "%s"' % pkgName)
         if None == ret: return not ins
         return 0 <= ret.lower().find('success') or not ins
 
     @staticmethod
     def getInstallAppsWithSystem():
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -s'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -s'): return apps
         return None
 
     @staticmethod
     def getInstallAppsWithThird():
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -3'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -3'): return apps
         return None
 
     @staticmethod
     def getInstallAppsWithDisable():
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -d'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d'): return apps
         return None
 
     @staticmethod
     def getInstallAppsWithEnable():
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -e'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e'): return apps
         return None
 
     @staticmethod
     def getInstallApps():
         apps = set()
-        if not AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -e'): return None
-        if not AdbUtils.__getInstallApps__(apps, 'adb shell pm list packages -d'): return None
+        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e'): return None
+        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d'): return None
         return apps
 
     @staticmethod
     def __getInstallApps__(apps, cmd):
-        ret, __ = CmnUtils.doCmdEx(cmd)
+        ret = AdbUtils.doAdbCmd(cmd)
         if CmnUtils.isEmpty(ret): return True
 
         items = ret.split("\n")
@@ -171,8 +241,8 @@ class AdbUtils:
         astring = ''
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
-        cmd = 'adb shell am start -n %s/%s%s%s' % (pkgName, activityName, atype, astring)
-        return CmnUtils.doCmd(cmd)
+        cmd = 'shell am start -n %s/%s%s%s' % (pkgName, activityName, atype, astring)
+        return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
     def startService(pkgName, serviceName, tName, tVal, args):
@@ -180,8 +250,8 @@ class AdbUtils:
         astring = ''
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
-        cmd = 'adb shell am startservice -n %s/%s%s%s' % (pkgName, serviceName, atype, astring)
-        return CmnUtils.doCmd(cmd)
+        cmd = 'shell am startservice -n %s/%s%s%s' % (pkgName, serviceName, atype, astring)
+        return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
     def sendBroadcast(action, tName, tVal, args):
@@ -189,8 +259,8 @@ class AdbUtils:
         astring = ''
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
-        cmd = 'adb shell am broadcast -a %s%s%s' % (action, atype, astring)
-        return CmnUtils.doCmd(cmd)
+        cmd = 'shell am broadcast -a %s%s%s' % (action, atype, astring)
+        return AdbUtils.doAdbCmd(cmd)
 
     # @staticmethod
     # def sendBroadcast(pkgName, action, tName, tVal, args):
@@ -198,20 +268,20 @@ class AdbUtils:
     #     astring = ''
     #     for k,v in args.items():
     #         astring += ' --es %s %s' % (k, v)
-    #     cmd = 'adb shell am broadcast -a %s/%s%s%s' % (pkgName, action, atype, astring)
-    #     return CmnUtils.doCmd(cmd)
+    #     cmd = 'shell am broadcast -a %s/%s%s%s' % (pkgName, action, atype, astring)
+    #     return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
     def callProvider(authorities, tName, tVal, args):
         astring = ''
         for k, v in args.items():
             astring += ' --extra %s:s:%s' % (k, v)
-        cmd = 'adb shell content call --uri content://%s --method abg --extra %s:i:%d%s' % (authorities, tName, tVal, astring)
-        return CmnUtils.doCmd(cmd)
+        cmd = 'shell content call --uri content://%s --method abg --extra %s:i:%d%s' % (authorities, tName, tVal, astring)
+        return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
     def startInstrument(pkgName, args=None):
-        ret = CmnUtils.doCmd('adb shell pm list instrumentation')
+        ret = AdbUtils.doAdbCmd('shell pm list instrumentation')
         if None == ret:
             LoggerUtils.println('Not found instrument !')
             return -1
@@ -232,8 +302,8 @@ class AdbUtils:
         astring = ''
         if None != args:
             for k, v in args.items(): astring += ' -e %s %s' % (k, v)
-        cmd = 'adb shell am instrument -w %s %s' % (target, astring)
-        return CmnUtils.doCmdCall(cmd)
+        cmd = 'shell am instrument -w %s %s' % (target, astring)
+        return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
     def __get_value__(line, key):
@@ -277,7 +347,7 @@ class AdbUtils:
                     Run #0: ActivityRecord{6a3b344 u0 com.huawei.android.launcher/.unihome.UniHomeLauncher t1}
         """
         activities = {}
-        ret = CmnUtils.doCmd('adb shell dumpsys activity')
+        ret = AdbUtils.doAdbCmd('shell dumpsys activity')
         if ret.startswith('error:') or len(ret) < 256:
             LoggerUtils.w(ret)
             return activities
@@ -359,7 +429,7 @@ class AdbUtils:
               mShownAlpha=1.0 mAlpha=1.0 mLastAlpha=0.0
         """
         windows = set()
-        ret = CmnUtils.doCmd('adb shell dumpsys window')
+        ret = AdbUtils.doAdbCmd('shell dumpsys window')
         # print(ret)
         if ret.startswith('error:'):
             LoggerUtils.w(ret)
@@ -407,6 +477,7 @@ class AdbUtils:
 
 def run():
     pass
+    # print(AdbUtils.getDevices())
     # apps = AdbShell.getInstallAppsWithSystem()
     # for app in apps: print(app)
     # print('-----------------------------------')

@@ -41,7 +41,7 @@ class LoggerUtils:
 
     @staticmethod
     def alignLine(txt, num=48):
-        txt = txt if txt != None else ''
+        txt = txt if txt is not None else ''
         tail = num - len(txt)
         if 0 < tail:
             for i in range(tail): txt += ' '
@@ -119,7 +119,7 @@ class LoggerUtils:
 
     @staticmethod
     def getHandler():
-        if None == LoggerUtils.std_out_handle:
+        if LoggerUtils.std_out_handle is None:
             LoggerUtils.std_out_handle = ctypes.windll.kernel32.GetStdHandle(LoggerUtils.STD_OUTPUT_HANDLE)
         return LoggerUtils.std_out_handle
 
@@ -183,7 +183,7 @@ class LoggerUtils:
                 if currSize < cls.g_log_size: cls.g_log_size = currSize
                 with open(cls.g_log_file, 'r') as f:
                     f.seek(cls.g_log_size, 1)
-                    while None != cls.g_log_file:
+                    while ls.g_log_file is not None:
                         line = f.readline()
                         if line is None: break  # exception
                         l = len(line)
@@ -214,6 +214,9 @@ class LoggerUtils:
         cls.g_log_file = None
 
     @staticmethod
+    def formatArgument(arg): return arg.replace('\\', '/') if sys.platform.lower().startswith('win') else arg
+
+    @staticmethod
     def doPrintTreeLine(line, maxLen):
         if maxLen <= 0:
             print(line)
@@ -221,39 +224,46 @@ class LoggerUtils:
             line = line.strip()
             ll = line.replace('─', ' ').replace('├', ' ').replace('│', ' ').replace('└', ' ')
             l = len(ll.decode())
-            l += (len(ll) - l) / 2
+            l += int((len(ll) - l) / 2)
             assert l < maxLen, '%d, %d' % (maxLen, l)
             print(line + ' ' + ('-' * (maxLen - l)))
 
     @staticmethod
-    def getTreeMaxLen(dir_path, indent=''):
+    def getTreeMaxLen(dir_path, level, maxLevel, indent=''):
+        if 0 < maxLevel and maxLevel < level: return 0
+
         maxLen = 0
         files = os.listdir(dir_path)
         for i, file in enumerate(files):
-            full_path = os.path.join(dir_path, file)
+            full_path = LoggerUtils.formatArgument(os.path.join(dir_path, file))
             if os.path.isdir(full_path):
-                l = LoggerUtils.getTreeMaxLen(full_path, indent + '    ')
+                l = LoggerUtils.getTreeMaxLen(full_path, level + 1, maxLevel, indent + '    ')
             else:
                 l = len(indent + '    ' + file)
             if maxLen < l: maxLen = l
         return maxLen
 
     @staticmethod
-    def doPrintTree(dir_path, maxLen, indent=''):
+    def doPrintTree(dir_path, maxLen, level, maxLevel, indent=''):
+        if 0 < maxLevel and maxLevel < level: return
+
         files = os.listdir(dir_path)
         files.sort()
 
         fcnt = len(files)
         for i, file in enumerate(files):
-            full_path = os.path.join(dir_path, file)
+            full_path = LoggerUtils.formatArgument(os.path.join(dir_path, file))
             is_last = i == fcnt - 1
             if os.path.isdir(full_path):
                 if is_last:
                     LoggerUtils.doPrintTreeLine(indent + '└── ' + file, maxLen)
-                    LoggerUtils.doPrintTree(full_path, maxLen, indent + '    ')
+                    if indent.startswith(' ') or len(indent) <= 0:
+                        LoggerUtils.doPrintTree(full_path, maxLen, level + 1, maxLevel, '│' + indent + '    ')
+                    else:
+                        LoggerUtils.doPrintTree(full_path, maxLen, level + 1, maxLevel, indent + '    ')
                 else:
                     LoggerUtils.doPrintTreeLine(indent + '├── ' + file, maxLen)
-                    LoggerUtils.doPrintTree(full_path, maxLen, indent + '│   ')
+                    LoggerUtils.doPrintTree(full_path, maxLen, level + 1, maxLevel, indent + '│   ')
             else:
                 if is_last:
                     LoggerUtils.doPrintTreeLine(indent + '└── ' + file, maxLen)
@@ -261,10 +271,10 @@ class LoggerUtils:
                     LoggerUtils.doPrintTreeLine(indent + '├── ' + file, maxLen)
 
     @staticmethod
-    def printTree(dir_path, printLine=False):
+    def printTree(dir_path, maxLevel=0, printLine=False):
         print(os.path.basename(dir_path))
-        maxLen = LoggerUtils.getTreeMaxLen(dir_path) + 4 if printLine else 0
-        LoggerUtils.doPrintTree(dir_path, maxLen)
+        maxLen = LoggerUtils.getTreeMaxLen(dir_path, 1, maxLevel) + 4 if printLine else 0
+        LoggerUtils.doPrintTree(dir_path, maxLen, 1, maxLevel)
 
 
 def run():

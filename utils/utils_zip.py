@@ -10,7 +10,7 @@ from utils.utils_logger import LoggerUtils
 ImportUtils.initEnv()
 
 
-# -------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------
 class ZipUtils:
 
     @staticmethod
@@ -51,7 +51,7 @@ class ZipUtils:
         zin = zipfile.ZipFile(zipFile, 'r')
         zout = zipfile.ZipFile(tmpZipFile, 'w')
         for item in zin.infolist():
-            if (item.filename in oldFiles): continue
+            if item.filename in oldFiles: continue
             buffer = zin.read(item.filename)
             zout.writestr(item, buffer)
         zout.close()
@@ -62,8 +62,7 @@ class ZipUtils:
     def newZipAddFiles(zipFilePath, filesList):
         try:
             os.remove(zipFilePath)
-        except:
-            pass
+        except: pass
         z = zipfile.ZipFile(zipFilePath, 'a')
         for fileSon in filesList:
             LoggerUtils.println(fileSon)
@@ -111,11 +110,11 @@ class ZipUtils:
             zf.write(inPath, inPath[l:])
         else:
             for root, dirs, files in os.walk(inPath):
-                if None != ignoreDirs:
+                if ignoreDirs is not None:
                     rname = os.path.basename(root)
                     if rname in ignoreDirs: continue
                 for name in files:
-                    if None != ignoreFiles and name in ignoreFiles: continue
+                    if ignoreFiles is not None and name in ignoreFiles: continue
                     pp = root[l:]
                     if pp not in ss:
                         ss.add(pp)
@@ -148,7 +147,7 @@ class ZipUtils:
                 for name in files:
                     f = os.path.join(root, name)
                     pp = root[l:]
-                    if None != fileCallback and fileCallback(pp, name): continue
+                    if fileCallback is not None and fileCallback(pp, name): continue
                     if pp not in ss:
                         ss.add(pp)
                         zf.write(root, pp)
@@ -164,7 +163,7 @@ class ZipUtils:
         for fileName in zfile.namelist():
             zfile.extract(fileName, outPath)
             if fileName.endswith('/'): continue
-            if None == cb: continue
+            if cb is None: continue
             fullName = os.path.normpath(os.path.join(outPath, fileName))
             cb(fullName)
         zfile.close()
@@ -185,7 +184,7 @@ class ZipUtils:
     @staticmethod
     def zipFile(inFile, outZipFile, adbname=None):
         f = zipfile.ZipFile(outZipFile, 'w', zipfile.ZIP_DEFLATED)
-        f.write(inFile, os.path.basename(inFile) if None == adbname else adbname)
+        f.write(inFile, os.path.basename(inFile) if adbname is None else adbname)
         f.close()
 
     @staticmethod
@@ -201,7 +200,7 @@ class ZipUtils:
         z = zipfile.ZipFile(zipFile, 'r')
         for name in z.namelist():
             if name.endswith('/'): continue
-            if None != sw:
+            if sw is not None:
                 if name.startswith(sw): ff.append(name)
                 continue
             ff.append(name)

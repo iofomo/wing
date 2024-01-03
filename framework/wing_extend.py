@@ -28,13 +28,6 @@ def __getProjectPath__(chkFile):
     return WingEnv.getSpacePath()
 
 
-def doCreate(argv):
-    projPath = __getProjectPath__('.git/config')
-    succ = CmnUtils.doCmdCall('cd %s && python extend/extend_creator.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
-    assert succ, 'Create fail'
-    LoggerUtils.light('done.')
-
-
 def doBuild(argv):
     projPath = __getProjectPath__('mk.py')
     succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_build.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
@@ -83,6 +76,12 @@ def doProject(argv):
     assert succ, 'project command fail'
 
 
+def doScreen(argv):
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_screen.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+    assert succ, 'screen fail'
+    LoggerUtils.light('\ndone.')
+
+
 def doProperty(argv):
     """
         wing -prop
@@ -113,6 +112,12 @@ def doKey(argv):
     LoggerUtils.light('\ndone.')
 
 
+def doUpdate(argv):
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_update.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+    assert succ, 'update command fail'
+    LoggerUtils.light('\ndone.')
+
+
 def doCreate(argv):
     """
     wing -create b {new branch name} [base branch name]
@@ -121,16 +126,27 @@ def doCreate(argv):
     if argv[1] == 'b' or argv[1] == 't':
         return doGit(argv)
 
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_create.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'create command fail'
+    projPath = __getProjectPath__('.git/config')
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_creator.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv[1:])))
+    assert succ, 'Create command fail'
     LoggerUtils.light('\ndone.')
 
 
 def doTree(argv):
     """
-    wing -tree [l]
+    wing -tree [level] [l]
     """
-    LoggerUtils.printTree(WingEnv.getEnvPath(), not CmnUtils.isEmpty(argv) and argv[0] == 'l')
+    maxLevel = 0
+    printLine = False
+    l = 0 if None == argv else len(argv)
+    if 0 < l:
+        if argv[0] == 'l': printLine = True
+        elif argv[0].isdigit(): maxLevel = int(argv[0])
+    if 1 < l:
+        if argv[1] == 'l': printLine = True
+        elif argv[1].isdigit(): maxLevel = int(argv[1])
+
+    LoggerUtils.printTree(WingEnv.getEnvPath(), maxLevel, printLine)
     LoggerUtils.light('\ndone.')
 
 
@@ -162,14 +178,14 @@ def doSpace(argv):
 
 
 def run(_argv):
-    typ, argv = _argv[0], _argv[1:]
+    typ, argv = _argv[0], (_argv[1:] if 1 < len(_argv) else [])
     if '-build' == typ: return doBuild(argv)
     if '-clean' == typ: return doClean(argv)
     if '-refresh' == typ: return doRefresh(argv)
     if '-adb' == typ: return doADB(argv)
     if '-switch' == typ: return doSwitch(argv)
     if '-publish' == typ: return doPublish(argv)
-    # if '-project' == typ: return doProject(argv)
+    if '-update' == typ: return doUpdate(argv)
 
     if '-prop' == typ: return doProperty(argv)
     if '-space' == typ: return doSpace(argv)
@@ -178,6 +194,7 @@ def run(_argv):
     if typ in ['-branch', '-push', '-status']: return doGit(_argv)
     if '-create' == typ: return doCreate(_argv)
     if '-tree' == typ: return doTree(argv)
+    if '-screen' == typ: return doScreen(argv)
 
     LoggerUtils.e('UNsupport: ' + CmnUtils.joinArgs(_argv))
 

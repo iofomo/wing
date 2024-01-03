@@ -6,7 +6,7 @@
 import os, sys, time, json, shutil
 from fnmatch import fnmatchcase
 from utils.utils_logger import LoggerUtils
-
+from utils.utils_cmn import CmnUtils
 
 # -------------------------------------------------------------
 class FileUtils:
@@ -32,8 +32,8 @@ class FileUtils:
 
     @classmethod
     def getTempName(cls, pre=None, end=None):
-        if None == pre: pre = ''
-        if None == end: end = ''
+        if pre is None: pre = ''
+        if end is None: end = ''
         v = int(time.time() * 10)
         cls.g_temp_file_index += 1
         return '%s%ld%d%s' % (pre, v, cls.g_temp_file_index, end)
@@ -41,7 +41,7 @@ class FileUtils:
     @classmethod
     def getTempTimeName(cls, pre=None, end=None):
         tname = time.strftime('%Y%m%d_%H%M%S')
-        return ('' if None == pre else pre) + tname + ('' if None == end else end)
+        return ('' if pre is None else pre) + tname + ('' if end is None else end)
 
     @staticmethod
     def getFileTailName(name, tail):
@@ -85,12 +85,11 @@ class FileUtils:
 
     @staticmethod
     def loadJsonByFile(name):
-        if None == name or len(name) <= 0: return None
+        if CmnUtils.isEmpty(name): return None
         try:
             if not os.path.isfile(name): return None
-            with open(name, 'rb') as f:
-                content = f.read()
-            # json.loads(content, ensure_ascii=False)
+            with open(name, 'rb') as f: content = f.read()
+            #json.loads(content, ensure_ascii=False)
             return json.loads(content)
         except Exception as e:
             LoggerUtils.println(e)
@@ -103,8 +102,7 @@ class FileUtils:
             jcntt = json.dumps(content)
             path = os.path.dirname(name)
             if not os.path.isdir(path): os.makedirs(path)
-            with open(name, 'w') as f:
-                f.write(jcntt)
+            with open(name, 'w') as f: f.write(jcntt)
             return True
         except Exception as e:
             LoggerUtils.println(e)
@@ -158,17 +156,28 @@ class FileUtils:
             toFile = toDir + os.sep + f
             if os.path.isdir(fromFile):
                 FileUtils.copyDir(fromFile, toFile)
-            elif None == cb or cb(fromFile, f):
+            elif cb is None or cb(fromFile, f):
                 shutil.copy(fromFile, toFile)
+
+    @staticmethod
+    def remove_tree(path):
+        if os.path.isdir(path):
+            items = os.listdir(path)
+            for item in items:
+                full_path = os.path.join(path, item)
+                FileUtils.remove_tree(full_path)
+            os.rmdir(path)
+        else:
+            os.remove(path)
 
     @staticmethod
     def remove(f, rmEmptyDir=True):
         if os.path.isdir(f):
             try:
-                shutil.rmtree(f)
+                FileUtils.remove_tree(f)
             except Exception as e:
                 pass
-        else:
+        elif os.path.exists(f):
             try:
                 os.remove(f)
                 if not rmEmptyDir: return
@@ -212,8 +221,7 @@ class FileUtils:
         if not os.path.isfile(fileName): return
 
         # load
-        with open(fileName, 'rb') as f:
-            lines = f.readlines()
+        with open(fileName, 'rb') as f: lines = f.readlines()
 
         newLines = []
         for line in lines:
@@ -238,8 +246,7 @@ class FileUtils:
             else:
                 newLines.append(line)
         # save
-        with open(fileName, 'wb') as f:
-            f.writelines(newLines)
+        with open(fileName, 'wb') as f: f.writelines(newLines)
 
 
 def run():

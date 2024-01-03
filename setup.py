@@ -10,6 +10,7 @@ os.system("") # Unable to explain this, just for Windows cmd color print
 
 from utils.utils_cmn import CmnUtils
 from utils.utils_logger import LoggerUtils
+from utils.utils_file import FileUtils
 from utils.utils_import import ImportUtils
 
 g_this_file = os.path.realpath(sys.argv[0])
@@ -17,7 +18,7 @@ g_this_path = os.path.dirname(g_this_file)
 sys.path.append(os.path.dirname(g_this_path))
 
 g_wing_path = ImportUtils.initEnv()
-g_bin_path = os.path.expanduser("~") + '/bin' # such as: /Users/${username}/bin
+g_bin_path = os.path.expanduser("~") + os.sep + 'bin' # such as: /Users/${username}/bin
 # --------------------------------------------------------------------------------------------------------------------------
 
 
@@ -28,11 +29,11 @@ def createPath(path):
     LoggerUtils.e('No access permissions for ' + path)
 
 
-def doClean():
+def doUninstall():
     LoggerUtils.println('rm files ...')
     try:
         ppath = os.path.dirname(g_wing_path)
-        if os.path.isdir(ppath): shutil.rmtree(ppath)
+        if os.path.isdir(ppath): FileUtils.remove(ppath)
         LoggerUtils.println('rm bin')
         if CmnUtils.isOsWindows():
             f = g_bin_path + os.sep + 'wing.py'
@@ -44,6 +45,8 @@ def doClean():
             if os.path.isfile(f): os.remove(f)
     except Exception as e:
         print(e)
+    print('\ndone.')
+
 
 def getWingVer():
     with open(g_this_path + os.sep + 'wing.py', 'r') as f:
@@ -69,10 +72,10 @@ def doInstall():
     createPath(g_bin_path)
     LoggerUtils.println('copy files ...')
     try:
-        if os.path.isdir(g_wing_path): shutil.rmtree(g_wing_path)
-        shutil.copytree(g_this_path, g_wing_path)
-        # if os.path.isdir(g_wing_path + os.sep + '.git'): shutil.rmtree(g_wing_path + os.sep + '.git')
-        if os.path.isdir(g_wing_path + os.sep + '.idea'): shutil.rmtree(g_wing_path + os.sep + '.idea')
+        if os.path.isdir(g_wing_path): FileUtils.remove(g_wing_path)
+        FileUtils.copyDir(g_this_path, g_wing_path)
+        # if os.path.isdir(g_wing_path + os.sep + '.git'): FileUtils.remove(g_wing_path + os.sep + '.git')
+        if os.path.isdir(g_wing_path + os.sep + '.idea'): FileUtils.remove(g_wing_path + os.sep + '.idea')
         LoggerUtils.println('copy bins ...')
         if CmnUtils.isOsWindows():
             shutil.copyfile(g_this_path + os.sep + 'wing.py', g_bin_path + os.sep + 'wing.py')
@@ -82,17 +85,11 @@ def doInstall():
             CmnUtils.doCmd('chmod a+x %s ' % (g_bin_path + os.sep + 'wing'))
 
         printInfo()
+        LoggerUtils.light('\nAdd to system environment: ' + g_bin_path)
         LoggerUtils.light('\n done.')
         return
     except Exception as e:
         print(e)
-    LoggerUtils.e('Install failed, rolling back ...')
-    doClean()
-
-
-def doUninstall():
-    doClean()
-    print('\ndone.')
 
 
 setup_config = {

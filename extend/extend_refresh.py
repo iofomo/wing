@@ -284,25 +284,19 @@ def doScanCMakeLists(spacePath, path, ignoreDirs, outFiles, level=0):
         outFiles.append(fname)
 
 
-def doFixCMakelist(spacePath, mf):
-    mlFile = spacePath + '/CMakeLists.txt'
-    if not os.path.exists(mlFile): return
-    cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
-    cplatform = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "platform")
-    if CmnUtils.isEmpty(cname) or CmnUtils.isEmpty(cplatform): return
-    LoggerUtils.printColorTexts('refresh: CMakeLists.txt ' + cname, LoggerUtils.BLUE_GRAY)
-
-    if 'android' != cplatform: return  # only for Android
-    if 'ANDROID_HOME' not in os.environ: return  # make sure env right
+def doFixAndroidCMakelist(mlFile, cname):
+    if 'ANDROID_HOME' not in os.environ:
+        LoggerUtils.w('ANDROID_HOME env not found')
+        return  # make sure env right
 
     # load
-    with open(mlFile, 'r') as f:
-        lines = f.readlines()
+    with open(mlFile, 'r') as f: lines = f.readlines()
+
     # search include_directories
     for line in lines:
         line = line.strip()
         if line.startswith('include_directories'): return  # has fixed
-        if line.startswith('project(') and line.find('ifma') < 0: return  # local not for Android
+        if line.startswith('project(') and line.find(cname) < 0: return  # local not for Android
 
     # fix
     needFixed = True
@@ -317,6 +311,18 @@ def doFixCMakelist(spacePath, mf):
                 f.writelines('include_directories(%s/ndk/21.4.7075529/sysroot/usr/include)\n' % sdkPath)
                 f.writelines('include_directories(%s/ndk/21.4.7075529/sources/android/support/include)\n' % sdkPath)
                 needFixed = False
+
+
+def doFixCMakelist(spacePath, mf):
+    cname = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "cmake")
+    cplatform = BasicXmlReader.readAttributeByElementIndex(mf, "meta-data", 0, "platform")
+    if CmnUtils.isEmpty(cname) or CmnUtils.isEmpty(cplatform): return
+    LoggerUtils.printColorTexts('refresh: CMakeLists.txt ' + cname, LoggerUtils.BLUE_GRAY)
+
+    mlFile = spacePath + '/CMakeLists.txt'
+    if 'android' == cplatform:
+        doFixAndroidCMakelist(mlFile, cname)
+        return  # only for Android
 
 
 def doRefreshCMakelist(spacePath, mf):

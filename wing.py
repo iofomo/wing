@@ -14,20 +14,22 @@ try:
         reload(sys)
         sys.setdefaultencoding('utf8')
     elif 3 == sys.version_info.major and sys.version_info.minor <= 3:  # 3.0 ~ 3.3
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
         import imp
-
         imp.reload(sys)
     else:  # 3.4 <=
         import importlib
-
         importlib.reload(sys)
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '1.0.12'
+g_ver = '1.1.22'
 # wing publish time, wing -v
-g_date = '2023.10.01'
+g_date = '2024.01.01'
 g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'
 g_git_wing_remote = 'platform/wing'
 g_git_wing_branch = 'master'
@@ -71,6 +73,7 @@ def formatCommand(cmd):
         cmd = pre[:2] + ' && ' + cmd
     return cmd
 
+def formatArgument(arg): return arg.replace('\\', '/') if isOsWindows() else arg
 
 def doCmd(cmd):
     cmd = formatCommand(cmd)
@@ -269,11 +272,19 @@ def run():
 
     if cmd == 'init':
         doWingSync()
-        cmd = 'cd "%s" && python framework/wing_init.py "%s" "%s" %s ' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[2:]))
+        cmd = 'cd "%s" && python framework/wing_init.py "%s" "%s" %s ' % (g_wing_path,
+                                                                          formatArgument(g_env_path if isEmpty(g_space_path) else g_space_path),
+                                                                          formatArgument(g_env_path),
+                                                                          ' '.join(sys.argv[2:])
+                                                                          )
     elif cmd == 'sync':
         assert not isEmpty(g_space_path), 'Invalid wing workspace'
         doWingSync()
-        cmd = 'cd "%s" && python framework/wing_sync.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, ' '.join(sys.argv[2:]))
+        cmd = 'cd "%s" && python framework/wing_sync.py "%s" "%s" %s' % (g_wing_path,
+                                                                         formatArgument(g_space_path),
+                                                                         formatArgument(g_env_path),
+                                                                         ' '.join(sys.argv[2:])
+                                                                         )
     elif cmd == 'manifest':
         println('Ignore command: ' + ' '.join(sys.argv))
         return
@@ -285,13 +296,25 @@ def run():
             println('Ignore command: ' + ' '.join(sys.argv))
             return
         cmdStr = cmdStr[pos + len('git '):]  # got "reset --hard"
-        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_space_path, g_env_path, cmdStr)
+        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path,
+                                                                        formatArgument(g_space_path),
+                                                                        formatArgument(g_env_path),
+                                                                        cmdStr
+                                                                        )
     elif cmd.startswith('-'):
         # assert not isEmpty(g_space_path), 'Invalid wing workspace'
-        cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" %s' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[1:]))
+        cmd = 'cd "%s" && python framework/wing_extend.py "%s" "%s" %s' % (g_wing_path,
+                                                                           formatArgument(g_env_path if isEmpty(g_space_path) else g_space_path),
+                                                                           formatArgument(g_env_path),
+                                                                           ' '.join(sys.argv[1:])
+                                                                           )
     else:
         # assert not isEmpty(g_space_path), 'Invalid wing workspace'
-        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path, g_env_path if isEmpty(g_space_path) else g_space_path, g_env_path, ' '.join(sys.argv[1:]))
+        cmd = 'cd "%s" && python framework/wing_git.py "%s" "%s" %s' % (g_wing_path,
+                                                                        formatArgument(g_env_path if isEmpty(g_space_path) else g_space_path),
+                                                                        formatArgument(g_env_path),
+                                                                        ' '.join(sys.argv[1:])
+                                                                        )
     # println(cmd)
     succ = doCmdCall(cmd)
     assert succ, 'Error: fail'

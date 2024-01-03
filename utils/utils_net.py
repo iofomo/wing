@@ -89,6 +89,30 @@ class NetUtils:
         return False
 
     @staticmethod
+    def downloadFileWithProgress(url, dldFile):
+        response = url_request.urlopen(url)
+        total_size = int(response.headers.get('content-length', 0))
+        block_size = 10240
+
+        with open(dldFile, 'wb') as file:
+            lastMsg = None
+            downloaded_size = 0
+            while True:
+                buffer = response.read(block_size)
+                if not buffer: break
+
+                downloaded_size += len(buffer)
+                file.write(buffer)
+
+                progress = int(50 * downloaded_size / total_size)
+                msg = "[%s%s] %d%%" % ('=' * progress, ' ' * (50 - progress), 2 * progress)
+                if lastMsg == msg: continue
+                lastMsg = msg
+                sys.stdout.write(msg)
+                sys.stdout.write('\n')
+                sys.stdout.flush()
+
+    @staticmethod
     def downloadFileByWeb(url, f):
         if os.path.exists(f): os.remove(f)
         try:

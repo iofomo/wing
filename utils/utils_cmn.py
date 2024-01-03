@@ -97,6 +97,9 @@ class CmnUtils:
         return '"' + arg + '"'
 
     @staticmethod
+    def formatArgument(arg): return arg.replace('\\', '/') if CmnUtils.isOsWindows() else arg
+
+    @staticmethod
     def formatCommand(cmd):
         if not CmnUtils.isOsWindows(): return cmd
         if cmd.startswith('chmod '): return None
@@ -194,7 +197,7 @@ class CmnUtils:
                     l1 = line.replace('\n', '').replace('\r', '')
                     if len(l1) <= 0: continue
                 LoggerUtils.println(line)
-            return p.returncode is None or p.returncode == 0 or p.returncode == '0'
+            return p.returncode is None or (p.returncode == 0 or p.returncode == '0')
         except Exception as e:
             LoggerUtils.println(e)
         return False
@@ -257,7 +260,7 @@ class CmnUtils:
 
     @staticmethod
     def runThread(cb, cbArgs, sync=False):
-        th = cmn_thread(cb, cbArgs)
+        th = CmnThread(cb, cbArgs)
         th.start()
         if sync: th.join()  # wait finished
         return th
@@ -345,7 +348,7 @@ class CmnUtils:
         return pp
 
 
-class cmn_thread(threading.Thread):
+class CmnThread(threading.Thread):
     def __init__(self, _cb, _cbArgs):
         threading.Thread.__init__(self)
         self.th_cb = _cb
@@ -353,3 +356,24 @@ class cmn_thread(threading.Thread):
 
     def run(self):
         self.th_cb(self.th_args)
+
+
+class CmnProcess:
+
+    def __init__(self, cb):
+        self.callback = cb
+        self.proc = None
+
+    def start(self, arg):
+        import multiprocessing
+        self.proc = multiprocessing.Process(target=self.callback, args=(arg,))
+        self.proc.start()
+
+    def terminate(self):
+        if self.proc == None: return
+        if self.proc.is_alive():
+            self.proc.terminate()
+
+        # wait for quit
+        self.proc.join()
+        self.proc = None

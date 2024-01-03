@@ -22,8 +22,8 @@ class WingEnv:
 
     @classmethod
     def init(cls, spacePath, envPath):
-        cls.g_space_path = spacePath
-        cls.g_env_path = envPath
+        cls.g_space_path = CmnUtils.formatArgument(spacePath)
+        cls.g_env_path = CmnUtils.formatArgument(envPath)
         cls.doLoad()
 
     @classmethod
@@ -38,6 +38,7 @@ class WingEnv:
     def getWingPath(cls):
         if cls.g_wing_path is None:
             cls.g_wing_path = os.path.expanduser("~") + os.sep + '.wing/wing'  # such as: /Users/${username}/.wing/wing
+            cls.g_wing_path = CmnUtils.formatArgument(cls.g_wing_path)
         return cls.g_wing_path
 
     @classmethod
