@@ -16,7 +16,7 @@ from utils.utils_import import ImportUtils
 from basic.git import BasicGit
 from basic.arguments import BasicArgumentsValue
 
-ImportUtils.initEnv()
+ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

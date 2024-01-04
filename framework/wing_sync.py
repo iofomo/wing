@@ -11,11 +11,12 @@ sys.path.append(os.path.dirname(g_this_path))
 from utils.utils_cmn import CmnUtils
 from utils.utils_logger import LoggerUtils
 from utils.utils_file import FileUtils
+from utils.utils_import import ImportUtils
 from framework.wing_env import WingEnv
 from framework.wing_git import WingGit
 from framework.wing_manifest import ManifestHandler
 
-
+ImportUtils.initEnv(os.path.dirname(g_this_path))
 # ----------------------------------------------------------------------------------------------------------------------
 def doRefresh():
     LoggerUtils.light('\nrefresh ...')

@@ -19,7 +19,7 @@ from basic.arguments import BasicArgumentsValue
 from extend.extend_base import ExtendBase
 from framework.wing_env import WingEnv
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

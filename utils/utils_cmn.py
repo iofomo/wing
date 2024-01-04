@@ -143,7 +143,7 @@ class CmnUtils:
                     line = line.decode().strip()
                     if len(line) <= 0: continue
                     f.write(line + '\n')
-            return False
+            return True
         except Exception as e:
             LoggerUtils.println(e)
         finally:

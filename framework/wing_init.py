@@ -18,7 +18,7 @@ from framework.wing_git import WingGit
 from framework.wing_sync import WingSync
 from basic.git import BasicGit
 
-ImportUtils.initEnv()
+ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # -----------------------------------------------------------------------------------------------------------------------------

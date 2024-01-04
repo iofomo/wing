@@ -19,7 +19,7 @@ from utils.utils_net import NetUtils
 from utils.utils_file import FileUtils
 from basic.arguments import BasicArgumentsValue
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 BASE_URL_FMT = 'http://www.iofomo.com/download/wing/%s'
 # --------------------------------------------------------------------------------------------------------------------------

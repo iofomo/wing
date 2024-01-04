@@ -17,7 +17,7 @@ g_this_file = os.path.realpath(sys.argv[0])
 g_this_path = os.path.dirname(g_this_file)
 sys.path.append(os.path.dirname(g_this_path))
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 g_bin_path = os.path.expanduser("~") + os.sep + 'bin' # such as: /Users/${username}/bin
 # --------------------------------------------------------------------------------------------------------------------------
 

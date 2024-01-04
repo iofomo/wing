@@ -11,6 +11,10 @@ class ImportUtils:
 
     g_inited = False
     g_space_path = None
+    g_project_path = None
+
+    @classmethod
+    def getProjectPath(cls): return cls.g_project_path
 
     @classmethod
     def __init_coding__(cls):
@@ -22,11 +26,13 @@ class ImportUtils:
             elif 3 == sys.version_info.major and sys.version_info.minor <= 3:  # 3.0 ~ 3.3
                 import io
                 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
                 import imp
                 imp.reload(sys)
             else:  # 3.4 <=
                 import io
                 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+                sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
                 import importlib
                 importlib.reload(sys)
             import _locale
@@ -38,8 +44,10 @@ class ImportUtils:
     @staticmethod
     def formatArgument(arg): return arg.replace('\\', '/') if sys.platform.lower().startswith('win') else arg
 
-    @staticmethod
-    def initEnv():
+    @classmethod
+    def initEnv(cls, projPath=None):
+        if projPath is not None: cls.g_project_path = projPath
+
         ImportUtils.__init_coding__()
         wingPath = os.path.expanduser("~") + os.sep + '.wing/wing' #  such as: /Users/${username}/.wing/wing
         return ImportUtils.formatArgument(wingPath)

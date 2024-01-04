@@ -6,12 +6,8 @@
 import os
 import sys
 
-g_this_file = os.path.realpath(sys.argv[0])
-g_this_path = os.path.dirname(g_this_file)
-sys.path.append(os.path.dirname(g_this_path))
-
 from utils.utils_cmn import CmnUtils
-
+from utils.utils_import import ImportUtils
 
 # ----------------------------------------------------------------------------------------------------------------------
 class Resource:
@@ -20,8 +16,7 @@ class Resource:
     @classmethod
     def __do_init__(cls):
         cls.sRes = {}
-        path = os.path.dirname(g_this_path)
-        f = path + '/res/res-' + CmnUtils.getLanguageName() + '.txt'
+        f = ImportUtils.getProjectPath() + '/res/res-' + CmnUtils.getLanguageName() + '.txt'
         with open(f, 'rb') as f:
             while True:
                 line = f.readline().decode()

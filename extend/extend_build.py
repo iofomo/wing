@@ -14,7 +14,7 @@ from utils.utils_logger import LoggerUtils
 from utils.utils_import import ImportUtils
 from basic.arguments import BasicArgumentsValue
 
-ImportUtils.initEnv()
+ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

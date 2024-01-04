@@ -19,7 +19,7 @@ from basic.arguments import BasicArgumentsValue
 from basic.space import BasicSpace
 from basic.gradle import BasicGradle
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

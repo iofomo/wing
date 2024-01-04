@@ -113,7 +113,7 @@ class FileUtils:
         FileUtils.ensureDir(path)
         name = 'log_' + time.strftime('%Y%m%d_%H%M%S')
         fullName = path + os.path.sep + name
-        with open(fullName, 'wb') as f: f.write(msg)
+        with open(fullName, 'w') as f: f.write(msg)
         return fullName
 
     @staticmethod

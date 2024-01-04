@@ -15,7 +15,7 @@ from utils.utils_import import ImportUtils
 from framework.wing_env import WingEnv
 from framework.wing_init import switchBranch
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

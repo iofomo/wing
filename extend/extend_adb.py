@@ -19,7 +19,7 @@ from utils.utils_file import FileUtils
 from utils.utils_adb import AdbUtils
 from basic.arguments import BasicArgumentsValue
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------

@@ -9,9 +9,6 @@
 
 import sys, os
 
-g_this_file = os.path.realpath(sys.argv[0])
-g_this_path = os.path.dirname(g_this_file)
-
 from utils.utils_import import ImportUtils
 from utils.utils_cmn import CmnUtils
 from utils.utils_file import FileUtils
@@ -42,7 +39,7 @@ class AdbUtils:
         LoggerUtils.println('download adb ...')
         url = BASE_URL_FMT % AdbUtils.getFileName()
         try:
-            zPath = os.path.dirname(g_this_path) + '/plugin'
+            zPath = ImportUtils.getProjectPath() + '/plugin'
             if not os.path.exists(zPath): os.makedirs(zPath)
             zFile = zPath + os.sep + AdbUtils.getFileName()
             NetUtils.downloadFileWithProgress(url, zFile)
@@ -76,7 +73,7 @@ class AdbUtils:
 
     @staticmethod
     def getAdbBinFile():
-        return os.path.dirname(g_this_path) + '/plugin/adb/adb' + CmnUtils.getOsStuffix()
+        return ImportUtils.getProjectPath() + '/plugin/adb/adb' + CmnUtils.getOsStuffix()
 
     @staticmethod
     def getFileTimestamp(f):
@@ -103,6 +100,9 @@ class AdbUtils:
             if CmnUtils.isEmpty(item) or not item.endswith('device'): continue
             devices.append(item.split('\t')[0])
         return devices
+
+    @staticmethod
+    def isDeviceConnected(): return 0 < len(AdbUtils.getDevices())
 
     @staticmethod
     def pull(src, des):

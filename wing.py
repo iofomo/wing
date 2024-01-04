@@ -16,6 +16,7 @@ try:
     elif 3 == sys.version_info.major and sys.version_info.minor <= 3:  # 3.0 ~ 3.3
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
         import imp
         imp.reload(sys)
     else:  # 3.4 <=
@@ -23,11 +24,12 @@ try:
         importlib.reload(sys)
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '1.1.22'
+g_ver = '1.2.0'
 # wing publish time, wing -v
 g_date = '2024.01.01'
 g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'

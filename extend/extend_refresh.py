@@ -19,7 +19,7 @@ from basic.space import BasicSpace
 from basic.xmlreader import BasicXmlReader
 from basic.resource import Resource
 
-g_wing_path = ImportUtils.initEnv()
+g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 
 # --------------------------------------------------------------------------------------------------------------------------
