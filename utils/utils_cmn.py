@@ -120,8 +120,11 @@ class CmnUtils:
             line = ''
             while True:
                 l = p.stdout.readline()
-                if not l: break
-                l = l.decode().strip()
+                # if not l: break
+                if CmnUtils.isEmpty(l):
+                    if p.poll() is not None: break
+                    continue
+                l = l.decode().strip('\r\n')
                 if len(l) <= 0: continue
                 line += l + '\n'
             return line
@@ -139,8 +142,11 @@ class CmnUtils:
             with open(fname, 'w') as f:
                 while True:
                     line = p.stdout.readline()
-                    if not line: break
-                    line = line.decode().strip()
+                    # if not line: break
+                    if CmnUtils.isEmpty(line):
+                        if p.poll() is not None: break
+                        continue
+                    line = line.decode().strip('\r\n')
                     if len(line) <= 0: continue
                     f.write(line + '\n')
             return True
@@ -160,6 +166,7 @@ class CmnUtils:
         outResults = ''
         errResults = ''
         cmd = CmnUtils.formatCommand(cmd)
+        # print(cmd)
         if cmd is None: return outResults, errResults
 
         try:
@@ -184,14 +191,18 @@ class CmnUtils:
     def doCmdCall(cmd):
         isWin = CmnUtils.isOsWindows()
         cmd = CmnUtils.formatCommand(cmd)
+        # print(cmd)
         if cmd is None: return True
 
         try:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while True:
                 line = p.stdout.readline()
-                if not line: break
-                line = line.decode().strip()
+                # if not line: break
+                if CmnUtils.isEmpty(line):
+                    if p.poll() is not None: break
+                    continue
+                line = line.decode().strip('\r\n')
                 if len(line) <= 0: continue
                 if isWin:
                     l1 = line.replace('\n', '').replace('\r', '')

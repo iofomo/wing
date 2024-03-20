@@ -29,9 +29,9 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '1.2.0'
+g_ver = '1.2.3'
 # wing publish time, wing -v
-g_date = '2024.01.01'
+g_date = '2024.03.18'
 g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'
 g_git_wing_remote = 'platform/wing'
 g_git_wing_branch = 'master'
@@ -80,14 +80,17 @@ def formatArgument(arg): return arg.replace('\\', '/') if isOsWindows() else arg
 def doCmd(cmd):
     cmd = formatCommand(cmd)
     if cmd is None: return ''
-
+    # println(cmd)
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         lines = ''
         while True:
             line = p.stdout.readline()
-            if not line: break
-            line = line.decode().strip()
+            # if not line: break
+            if isEmpty(line):
+                if p.poll() is not None: break
+                continue
+            line = line.decode().strip('\r\n')
             if 0 < len(line): lines += line + '\n'
         return lines
     except Exception as e:
@@ -98,19 +101,19 @@ def doCmd(cmd):
 def doCmdCall(cmd):
     cmd = formatCommand(cmd)
     if cmd is None: return True
-
+    # println(cmd)
     try:
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        isWin = isOsWindows()
+        # isWin = isOsWindows()
         while True:
             line = p.stdout.readline()
-            if not line: break
-            line = line.decode().strip()
+            # if not line: break
+            if isEmpty(line):
+                if p.poll() is not None: break
+                continue
+            line = line.decode().strip('\r\n')
             if len(line) <= 0: continue
-            if isWin:
-                l1 = line.replace('\n', '').replace('\r', '')
-                if len(l1) <= 0: continue
-            print(line)
+            println(line)
         return p.returncode is None or p.returncode == 0 or p.returncode == '0'
     except Exception as e:
         println(e)

@@ -5,6 +5,7 @@
                 wing init workspace2 tag_1.0 release.xml
        sync [f] sync code from remote from manifests
             f:  Force switch to new branch, discard all local changes
+       -update  update to the latest version
 
     wing git commands:
        -status  Check if the local code has changed
@@ -44,6 +45,8 @@
                 pull target apk from Android device
             dump {ui/sys/log}
                 get all running services and log info from Android device
+            list
+                get all install app list
 
     wing project commands:
        -create [type name]

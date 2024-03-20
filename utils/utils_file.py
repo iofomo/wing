@@ -248,6 +248,30 @@ class FileUtils:
         # save
         with open(fileName, 'wb') as f: f.writelines(newLines)
 
+    @staticmethod
+    def listFiles(path):
+        for dirpath, dirnames, filenames in os.walk(path): return filenames
+        return []
+
+    @staticmethod
+    def listAll(path):
+        for dirpath, dirnames, filenames in os.walk(path): return dirnames + filenames
+        return []
+
+    @staticmethod
+    def findLastModifyFile(path, pre=None, tail=None):
+        ff = FileUtils.listFiles(path)
+        if None == ff: return None
+        lastTs = 0
+        lastFile = None
+        for f in ff:
+            if not CmnUtils.isEmpty(pre) and not f.startswith(pre): continue
+            if not CmnUtils.isEmpty(tail) and not f.endswith(tail): continue
+            ts = FileUtils.getModifyTime(path + os.sep + f)
+            if ts < lastTs: continue
+            lastTs = ts
+            lastFile = path + os.sep + f
+        return lastFile
 
 def run():
     print(FileUtils.sizeToString(20))

@@ -24,7 +24,7 @@ g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 # --------------------------------------------------------------------------------------------------------------------------
 def doTopInfo():
-    AdbUtils.printlnDump()
+    AdbUtils.dumpTop()
 
 
 def doPullPackage(projPath, pkg):
@@ -146,9 +146,26 @@ def doDump(env_path, _mode):
         LoggerUtils.println(e)
 
 
+def doListPrint(tag, apps):
+    LoggerUtils.light('\n[' + tag + ']: ')
+    if CmnUtils.isEmpty(apps):
+        LoggerUtils.w('[' + tag + ']: None')
+        return
+    for app in apps:
+        LoggerUtils.println('[' + tag + ']: ' + app)
+
+def doList():
+    apps = AdbUtils.getInstallAppsWithSystem()
+    doListPrint('Sys', apps)
+    apps = AdbUtils.getInstallAppsWithThird()
+    doListPrint('App', apps)
+    apps = AdbUtils.getInstallAppsWithDisable()
+    doListPrint('Disabled', apps)
+
 def run():
     """
     wing -adb top
+    wing -adb list
     wing -adb pull <package name>
     wing -adb stop <package name>
     wing -adb clear <package name>
@@ -161,6 +178,7 @@ def run():
     if typ == 'stop': return doStopApp(envPath, za.get(3))
     if typ == 'clear': return doClearApp(envPath, za.get(3))
     if typ == 'dump': return doDump(envPath, za.get(3))
+    if typ == 'list': return doList()
     assert 0, 'Unsupported type: ' + typ
 
 

@@ -74,7 +74,7 @@ def doInstall():
     try:
         if os.path.isdir(g_wing_path): FileUtils.remove(g_wing_path)
         FileUtils.copyDir(g_this_path, g_wing_path)
-        # if os.path.isdir(g_wing_path + os.sep + '.git'): FileUtils.remove(g_wing_path + os.sep + '.git')
+        if os.path.isdir(g_wing_path + os.sep + '.git'): FileUtils.remove(g_wing_path + os.sep + '.git')
         if os.path.isdir(g_wing_path + os.sep + '.idea'): FileUtils.remove(g_wing_path + os.sep + '.idea')
         LoggerUtils.println('copy bins ...')
         if CmnUtils.isOsWindows():

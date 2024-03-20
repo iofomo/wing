@@ -7,7 +7,7 @@
 #          adb shell content call ...
 # @date:   2023.08.10 14:40:50
 
-import sys, os
+import sys, os, re
 
 from utils.utils_import import ImportUtils
 from utils.utils_cmn import CmnUtils
@@ -81,7 +81,7 @@ class AdbUtils:
         try:
             ret = AdbUtils.doAdbCmd(cmd)
             if None == ret: return 0
-            LoggerUtils.println(ret)
+            # LoggerUtils.println(ret)
             ret = ret.strip()
             if len(ret) <= 0 or not ret.isdigit(): return 0
             return int(ret)
@@ -123,14 +123,18 @@ class AdbUtils:
     def push(src, des):
         src = os.path.abspath(src)
         ts1 = AdbUtils.getFileTimestamp(des)
-        des2 = des + os.sep + os.path.basename(src)
-        ts2 = AdbUtils.getFileTimestamp(des2)
+        if os.path.basename(src) != os.path.basename(des):
+            des2 = des + os.sep + os.path.basename(src)
+            ts2 = AdbUtils.getFileTimestamp(des2)
+        else:
+            des2 = None
 
         AdbUtils.doAdbCmd('push "%s" "%s"' % (src, des))
         tsNew = AdbUtils.getFileTimestamp(des)
         if 0 != tsNew and ts1 <= tsNew: return True
-        tsNew = AdbUtils.getFileTimestamp(des2)
-        if 0 != tsNew and ts2 <= tsNew: return True
+        if des2 is not None:
+            tsNew = AdbUtils.getFileTimestamp(des2)
+            if 0 != tsNew and ts2 <= tsNew: return True
         return False
 
     @staticmethod
@@ -171,7 +175,9 @@ class AdbUtils:
     def install(apkFile):
         ret = AdbUtils.doAdbCmd('install -r "%s"' % apkFile)
         if None == ret: return False
-        return 0 <= ret.lower().find('success')
+        if 0 <= ret.lower().find('success'): return True
+        print(ret)
+        return False
 
     @staticmethod
     def uninstall(pkgName):
@@ -227,6 +233,11 @@ class AdbUtils:
         return True
 
     @staticmethod
+    def launchApp(pkgName, runSteps=1):
+        cmd = "shell monkey -p %s -c android.intent.category.LAUNCHER %d" % (pkgName, runSteps)
+        return AdbUtils.doAdbCmd(cmd)
+
+    @staticmethod
     def startActivity(pkgName, activityName, tName, tVal, args):
         """
         launch target app with activity
@@ -272,11 +283,11 @@ class AdbUtils:
     #     return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
-    def callProvider(authorities, tName, tVal, args):
-        astring = ''
-        for k, v in args.items():
-            astring += ' --extra %s:s:%s' % (k, v)
-        cmd = 'shell content call --uri content://%s --method abg --extra %s:i:%d%s' % (authorities, tName, tVal, astring)
+    def callProvider(authorities, method, arg, extras):
+        extrastring = ''
+        for k, v in extras.items():
+            extrastring += '--extra %s:s:%s ' % (k, v)
+        cmd = 'shell content call --uri content://%s --method %s --arg %s %s' % (authorities, method, arg, extrastring)
         return AdbUtils.doAdbCmd(cmd)
 
     @staticmethod
@@ -473,6 +484,44 @@ class AdbUtils:
         if 0 < len(activities):
             LoggerUtils.println('Top Activity: ')
             for pkg, line in activities.items(): LoggerUtils.println('\tpackage: ' + pkg + ', ' + line)
+
+    @staticmethod
+    def __do_parser_package_name__(s):
+        items = s.split('\n')
+        for item in items:
+            item = item.strip()
+            matches = re.findall(r'\s[A-Za-z0-9_.]+/', item)
+            if CmnUtils.isEmpty(matches): continue
+            return matches[0][:-1].strip()
+        return None
+
+    @staticmethod
+    def dumpTop():
+        # top windows
+        wret = AdbUtils.doAdbCmd('shell dumpsys window | grep mCurrentFocus')
+        LoggerUtils.println(None if CmnUtils.isEmpty(wret) else wret.strip())
+        # top activity
+        aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep mResumedActivity"')
+        if CmnUtils.isEmpty(aret):
+            aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep ResumedActivity"')
+        LoggerUtils.println(None if CmnUtils.isEmpty(aret) else aret.strip())
+
+        LoggerUtils.println(' ')
+        if CmnUtils.isEmpty(wret):
+            LoggerUtils.w("Top window none")
+        elif 0 <= wret.find('error:'):
+            LoggerUtils.w("dump top window fail")
+        else:
+            #  mCurrentFocus=Window{3222263 u0 com.sdu.didi.gsui/com.sdu.didi.gsui.main.MainActivity}
+            LoggerUtils.println('Top Window App: ' + AdbUtils.__do_parser_package_name__(wret))
+
+        if CmnUtils.isEmpty(aret):
+            LoggerUtils.w("Top activity none")
+        elif 0 <= aret.find('error:'):
+            LoggerUtils.w("dump top activity fail")
+        else:
+            #  mResumedActivity: ActivityRecord{38e7b1 u0 com.sdu.didi.gsui/.main.MainActivity t4265}
+            LoggerUtils.println('Top Activity App: ' + AdbUtils.__do_parser_package_name__(aret))
 
 
 def run():
