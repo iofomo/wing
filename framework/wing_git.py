@@ -224,25 +224,27 @@ class WingGit:
 
     @staticmethod
     def fetchGit(projectLocal, projectServer):
+        if projectServer.endswith(".git"): projectServer = projectServer[:-4]
         localPath = WingEnv.getSpacePath() + os.sep + projectLocal
         projExist = os.path.isdir(localPath)
         if projExist:
             rname = WingGit.getGitRemoteServerName(localPath)
-            if rname is None or rname == projectServer: return projExist
+            if rname is None: return projExist
+            if rname.endswith(".git"): rname = rname[:-4]
+            if rname == projectServer: return projExist
             msg = 'file exist: ' + localPath
             msg += ', remote git changes: %s -> %s' % (rname, projectServer)
             msg += ', remove or backup, then try again'
             assert 0, msg
 
         sname = projectServer.split('/')[-1]
-        if sname.endswith('.git'): sname = sname[:-4]
         tmpPath = WingEnv.getSpacePath() + os.sep + '.wing' + os.sep + FileUtils.getTempName('.tmp_')
         try:
             os.makedirs(tmpPath)
             # git clone git@github.com:xxxxxx/${git lib name}
             # git clone git@codeup.aliyun.com.com:xxxxxx/${git lib name}
             # git clone ssh://xxxxxx@gerrit.xxx.com:2901/${git lib name}
-            ret = CmnUtils.doCmd('cd %s && git clone %s/%s' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
+            ret = CmnUtils.doCmd('cd %s && git clone %s/%s.git' % (tmpPath, WingEnv.getSpaceRemoteHost(), projectServer))
             if not os.path.isdir(tmpPath + os.sep + sname + os.sep + '.git'):
                 LoggerUtils.println(ret)
                 assert 0, 'Make sure have correct access rights for ' + projectServer + ' !'

@@ -23,24 +23,40 @@ g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 BASE_URL_FMT = 'http://www.iofomo.com/download/scrcpy/scrcpy-%s'
 # --------------------------------------------------------------------------------------------------------------------------
-def doScreen():
+def doEnvPrepare():
     AdbUtils.ensureEnv()
     sysEnv = isEnvOK()
     if not sysEnv:
         binFile = getBinFile()
-        if None == binFile: return
+        return sysEnv, binFile
+    return sysEnv, None
 
-    dd = AdbUtils.getDevices()
-    # print(dd)
-    if CmnUtils.isEmpty(dd):
+
+def doLaunchDevice(sysEnv, binFile, did):
+    LoggerUtils.println('Launch device: ' + did)
+    if sysEnv:
+        CmnUtils.doCmd("scrcpy -s " + did + " &")
+    elif binFile is not None:
+        CmnUtils.doCmd('%s -s %s &' % (CmnUtils.formatCmdArg(binFile), did))
+    else:
+        LoggerUtils.e('scrcpy not found')
+
+
+def doScreen(dids):
+    sysEnv, binFile = doEnvPrepare()
+    if CmnUtils.isEmpty(dids):
+        dids = AdbUtils.getDevices()
+    # print(dids)
+    if CmnUtils.isEmpty(dids):
         LoggerUtils.e('No devices found')
         return
-    if sysEnv:
-        for d in dd: CmnUtils.doCmd("scrcpy -s " + d + " &")
+    if sysEnv is None and binFile is None:
+        LoggerUtils.e('scrcpy not found')
         return
 
-    if binFile is None: return
-    for d in dd: CmnUtils.doCmd('%s -s %s &' % (CmnUtils.formatCmdArg(binFile), d))
+    for did in dids:
+        doLaunchDevice(sysEnv, binFile, did)
+
 
 def isEnvOK():
     ret = CmnUtils.doCmd("scrcpy -v")
@@ -81,12 +97,12 @@ def getBinFile():
 
 def run():
     """
-    wing -screen
+    wing -screen [device id]
     """
     za = BasicArgumentsValue()
-    envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)
-    if typ is None: return doScreen()
-    assert 0, 'Unsupported type: ' + typ
+    envPath, spacePath = za.get(0), za.get(1)
+    return doScreen(za.getLast(2))
+    # assert 0, 'Unsupported type: ' + typ
 
 
 if __name__ == "__main__":

@@ -35,30 +35,6 @@ def doBuild(argv):
     LoggerUtils.light('\ndone.')
 
 
-def doPublish(argv):
-    succ = CmnUtils.doCmdCall('cd %s && python extend/extend_publish.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'Publish fail'
-    LoggerUtils.light('done.')
-
-
-def doClean(argv):
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_clean.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'Clean fail'
-    LoggerUtils.light('\ndone.')
-
-
-def doRefresh(argv):
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_refresh.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'refresh fail'
-    LoggerUtils.light('\ndone.')
-
-
-def doADB(argv):
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_adb.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'adb fail'
-    LoggerUtils.light('\ndone.')
-
-
 def doGit(argv):
     projPath = __getProjectPath__('.git/config')
     succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_git.py "%s" "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), projPath, CmnUtils.joinArgs(argv)))
@@ -76,9 +52,12 @@ def doProject(argv):
     assert succ, 'project command fail'
 
 
-def doScreen(argv):
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_screen.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'screen fail'
+def doExtendCommand(cname, argv):
+    if not os.path.isfile(WingEnv.getWingPath() + ("/extend/extend_%s.py" % cname)):
+        LoggerUtils.e('UNsupport: ' + cname)
+        return
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_%s.py "%s" "%s" %s' % (WingEnv.getWingPath(), cname, WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+    assert succ, cname + ' fail'
     LoggerUtils.light('\ndone.')
 
 
@@ -88,6 +67,7 @@ def doProperty(argv):
     """
     if CmnUtils.isEmpty(argv):
         items = PropertiesUtils.getAll(WingEnv.getWingPath() + '.properties')
+        if None == items: return
         for k, v in items.items(): LoggerUtils.info(k + '=' + v)
         return
 
@@ -109,12 +89,6 @@ def doProperty(argv):
 def doKey(argv):
     succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_key.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
     assert succ, 'key command fail'
-    LoggerUtils.light('\ndone.')
-
-
-def doUpdate(argv):
-    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_update.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
-    assert succ, 'update command fail'
     LoggerUtils.light('\ndone.')
 
 
@@ -177,15 +151,16 @@ def doSpace(argv):
     LoggerUtils.e('Error: unsupport command: ' + ' '.join(argv))
 
 
+def doPlugin(argv):
+    succ = CmnUtils.doCmdCall('cd "%s" && python extend/extend_plugin.py "%s" "%s" %s' % (WingEnv.getWingPath(), WingEnv.getEnvPath(), WingEnv.getSpacePath(), CmnUtils.joinArgs(argv)))
+    assert succ, 'plugin command fail'
+    LoggerUtils.light('\ndone.')
+
+
 def run(_argv):
     typ, argv = _argv[0], (_argv[1:] if 1 < len(_argv) else [])
     if '-build' == typ: return doBuild(argv)
-    if '-clean' == typ: return doClean(argv)
-    if '-refresh' == typ: return doRefresh(argv)
-    if '-adb' == typ: return doADB(argv)
     if '-switch' == typ: return doSwitch(argv)
-    if '-publish' == typ: return doPublish(argv)
-    if '-update' == typ: return doUpdate(argv)
 
     if '-prop' == typ: return doProperty(argv)
     if '-space' == typ: return doSpace(argv)
@@ -194,9 +169,9 @@ def run(_argv):
     if typ in ['-branch', '-push', '-status']: return doGit(_argv)
     if '-create' == typ: return doCreate(_argv)
     if '-tree' == typ: return doTree(argv)
-    if '-screen' == typ: return doScreen(argv)
+    if typ in ['-jadx', '-apktool']: return doPlugin(_argv)
 
-    LoggerUtils.e('UNsupport: ' + CmnUtils.joinArgs(_argv))
+    return doExtendCommand(typ[1:], argv)
 
 
 if __name__ == "__main__":

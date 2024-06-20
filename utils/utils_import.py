@@ -14,7 +14,7 @@ class ImportUtils:
     g_project_path = None
 
     @classmethod
-    def getProjectPath(cls): return cls.g_project_path
+    def getProjectPath(cls): return '' if None == cls.g_project_path else cls.g_project_path
 
     @classmethod
     def __init_coding__(cls):

@@ -88,9 +88,8 @@ class FileUtils:
         if CmnUtils.isEmpty(name): return None
         try:
             if not os.path.isfile(name): return None
-            with open(name, 'rb') as f: content = f.read()
-            #json.loads(content, ensure_ascii=False)
-            return json.loads(content)
+            with open(name, 'r') as f:
+                return json.load(f)
         except Exception as e:
             LoggerUtils.println(e)
         return None
@@ -98,11 +97,10 @@ class FileUtils:
     @staticmethod
     def saveJsonToFile(name, content):
         try:
-            # json.dumps(content, ensure_ascii=False)
-            jcntt = json.dumps(content)
             path = os.path.dirname(name)
             if not os.path.isdir(path): os.makedirs(path)
-            with open(name, 'w') as f: f.write(jcntt)
+            with open(name, 'w') as f:
+                json.dump(content, f, ensure_ascii=False, indent=4)
             return True
         except Exception as e:
             LoggerUtils.println(e)

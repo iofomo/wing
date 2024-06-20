@@ -388,3 +388,48 @@ class CmnProcess:
         # wait for quit
         self.proc.join()
         self.proc = None
+
+
+class CmnVersion:
+    def __init__(self, verString):
+        self.maj, self.mid, self.min, self.build = self.doParse(verString)
+
+    def compareByString(self, verString):
+        v = CmnVersion(verString)
+        if v.maj < self.maj: return -1
+        if v.maj > self.maj: return 1
+        if v.mid < self.mid: return -1
+        if v.mid > self.mid: return 1
+        if v.min < self.min: return -1
+        if v.min > self.min: return 1
+        if v.build < self.build: return -1
+        if v.build > self.build: return 1
+        return 0
+
+    def compare(self, v):
+        if v.maj < self.maj: return -1
+        if v.maj > self.maj: return 1
+        if v.mid < self.mid: return -1
+        if v.mid > self.mid: return 1
+        if v.min < self.min: return -1
+        if v.min > self.min: return 1
+        if v.build < self.build: return -1
+        if v.build > self.build: return 1
+        return 0
+
+    def getVersion(self):
+        return '%d.%d.%d.%d' % (self.maj, self.mid, self.min, self.build)
+
+    def doParse(self, verString):
+        if CmnUtils.isEmpty(verString): return 0, 0, 0, 0
+        items = verString.split('.')
+        if CmnUtils.isEmpty(items):
+            return 0, 0, 0, 0
+        if len(items) <= 1: # 1
+            return int(items[0]), 0, 0, 0
+        if len(items) <= 2:  # 1.0
+            return int(items[0]), int(items[1]), 0, 0
+        if len(items) <= 3:  # 1.0.0
+            return int(items[0]), int(items[1]), int(items[2]), 0
+        # 1.0.0.101
+        return int(items[0]), int(items[1]), int(items[2]), int(items[3])

@@ -24,15 +24,22 @@ g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 # --------------------------------------------------------------------------------------------------------------------------
 def doTopInfo():
-    AdbUtils.dumpTop()
+    topWinPackage, topActivityPackage = AdbUtils.dumpTop()
+    LoggerUtils.light('Top window: ' + topWinPackage)
+    LoggerUtils.light('Top activity: ' + topActivityPackage)
 
+
+def doPullTop(projPath):
+    LoggerUtils.light('do parse top app ...')
+    topWinPackage, topActivityPackage = AdbUtils.dumpTop()
+    if not CmnUtils.isEmpty(topWinPackage):
+        LoggerUtils.light('do pull ' + topWinPackage + ' ...')
+        doPullPackage(projPath, topWinPackage)
+    if not CmnUtils.isEmpty(topActivityPackage) and topWinPackage != topActivityPackage:
+        LoggerUtils.light('do pull ' + topActivityPackage + ' ...')
+        doPullPackage(projPath, topActivityPackage)
 
 def doPullPackage(projPath, pkg):
-    if CmnUtils.isEmpty(pkg):
-        LoggerUtils.error('Error: Invalid commands')
-        LoggerUtils.println('The command is: "wing -adb pull {package name}"')
-        return
-
     pkgFile = AdbUtils.getApkFile(pkg)
     if CmnUtils.isEmpty(pkgFile):
         LoggerUtils.error('Error: ' + pkg + ' not found')
@@ -43,6 +50,28 @@ def doPullPackage(projPath, pkg):
         return
     LoggerUtils.light('from: ' + pkgFile)
     LoggerUtils.light('  to: ' + os.path.basename(outFile))
+
+
+def doPullPackages(projPath, name):
+    if CmnUtils.isEmpty(name):
+        LoggerUtils.error('Error: Invalid commands')
+        LoggerUtils.println('The command is: "wing -adb pull [package name/all/file]"')
+        return
+
+    if name == 'all':
+        pkgs = AdbUtils.getInstallAppsWithThird()
+        for pkg in pkgs:
+            if CmnUtils.isEmpty(pkg): continue
+            doPullPackage(projPath, pkg)
+    elif os.path.isfile(name):
+        with open(name, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                pkg = line.strip()
+                if CmnUtils.isEmpty(pkg): continue
+                doPullPackage(projPath, pkg)
+    else:
+        doPullPackage(projPath, name)
 
 
 def doStopApp(projPath, pkg):
@@ -162,23 +191,61 @@ def doList():
     apps = AdbUtils.getInstallAppsWithDisable()
     doListPrint('Disabled', apps)
 
+
+def doDevice(help):
+    AdbUtils.isDeviceConnected()
+    LoggerUtils.println(AdbUtils.doAdbCmd('devices'))
+    LoggerUtils.println(' ')
+    LoggerUtils.println(' ')
+    LoggerUtils.println('These are common adb commands used in wing:')
+    LoggerUtils.println(help)
+
+
+def doUninstall(name):
+    if name == 'all':
+        apps = AdbUtils.getInstallAppsWithThird()
+        for app in apps:
+            if CmnUtils.isEmpty(app): continue
+            AdbUtils.uninstall(app)
+            LoggerUtils.println('uninstall: ' + app)
+    elif os.path.isfile(name):
+        with open(name, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                pkg = line.strip()
+                if CmnUtils.isEmpty(pkg): continue
+                AdbUtils.uninstall(pkg)
+                LoggerUtils.println('uninstall: ' + pkg)
+    else:
+        AdbUtils.uninstall(name)
+        LoggerUtils.println('uninstall: ' + name)
+
+
 def run():
-    """
+    help = """
     wing -adb top
     wing -adb list
-    wing -adb pull <package name>
+    wing -adb pull [package name/all/file]
     wing -adb stop <package name>
     wing -adb clear <package name>
     wing -adb dump [ui/sys/log]
+    wing -adb uninstall [package name/all/file]
     """
+
     za = BasicArgumentsValue()
     envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)
+    if CmnUtils.isEmpty(typ): return doDevice(help)
     if typ == 'top': return doTopInfo()
-    if typ == 'pull': return doPullPackage(envPath, za.get(3))
+    if typ == 'pull':
+        pkg = za.get(3)
+        if 'top' == pkg:
+            return doPullTop(envPath)
+        return doPullPackage(envPath, pkg)
     if typ == 'stop': return doStopApp(envPath, za.get(3))
     if typ == 'clear': return doClearApp(envPath, za.get(3))
     if typ == 'dump': return doDump(envPath, za.get(3))
     if typ == 'list': return doList()
+    if typ == 'uninstall': return doUninstall(za.get(3))
     assert 0, 'Unsupported type: ' + typ
 
 

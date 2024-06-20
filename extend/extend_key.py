@@ -110,6 +110,20 @@ def doHash(str):
     LoggerUtils.println('{ 0x%x, 0x%x }, // %s' % (h, f, str))
 
 
+def showHelp():
+    help = '''
+        -key {type}
+            create {key type} {mode}
+                create RSA public and private keys with 1024 or 2048(default) mode
+            list {file} [pwd]
+                print key/sign information for apk/ipa/mobileprovision/keystore/jks/rsa/... file
+            hash {string}
+                print md5/sha256/hash/... of string
+    '''
+    LoggerUtils.println(' ')
+    LoggerUtils.println(help)
+
+
 def run():
     '''
     wing -key
@@ -123,7 +137,8 @@ def run():
     if cmd == 'create': return doCreate(envPath, argv.get(3), argv.get(4))
     # "wing -key hash ${string}"
     if cmd == 'hash': return doHash(argv.get(3))
-    LoggerUtils.error('Unsupported command: ' + cmd)
+
+    showHelp();
 
 
 if __name__ == "__main__":

@@ -3,9 +3,14 @@
 # @brief:  utils for network
 # @date:   2023.09.10 14:40:50
 
+import ssl
 import sys, os, tempfile, subprocess
 from utils.utils_cmn import CmnUtils
 
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except Exception as e:
+    pass
 try:
     from urllib import request as url_request
 except ImportError:

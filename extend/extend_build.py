@@ -19,6 +19,10 @@ ImportUtils.initEnv(os.path.dirname(g_this_path))
 
 # --------------------------------------------------------------------------------------------------------------------------
 def doBuild(spacePath, projName, projPath, buildType, subModule):
+    if os.path.isfile(spacePath + "/build.py"):
+        succ = CmnUtils.doCmdCall('cd %s && python build.py %s pre-build' % (spacePath, buildType))
+        assert succ, 'pre build fail'
+
     outPath = '%s/out/%s' % (spacePath, projName)
     try:
         os.makedirs(outPath)
@@ -82,7 +86,9 @@ def run():
     # eg: wing -build [$sub_module], such as:
     # wing -build
     # wing -build jni
-    doBuild(spacePath, projName, projPath, 'all', subModule)
+    # doBuild(spacePath, projName, projPath, 'all', subModule)
+    doBuild(spacePath, projName, projPath, 'debug', subModule)
+    doBuild(spacePath, projName, projPath, 'release', subModule)
 
 
 if __name__ == "__main__":

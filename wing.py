@@ -29,9 +29,9 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '1.2.3'
+g_ver = '1.3.0'
 # wing publish time, wing -v
-g_date = '2024.03.18'
+g_date = '2024.06.10'
 g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'
 g_git_wing_remote = 'platform/wing'
 g_git_wing_branch = 'master'
@@ -202,7 +202,7 @@ def fetchGitWing(wingPath):
         # git clone git@github.com:xxxxxx/${git name}
         # git clone git@codeup.aliyun.com.com:xxxxxx/${git name}
         # git clone ssh://xxxxxx@xxx.com:${port}/${git name}
-        ret = doCmd('cd %s && git clone %s/%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote))
+        ret = doCmd('cd %s && git clone %s/%s%s' % (os.path.dirname(wingPath), g_git_host, g_git_wing_remote, ('' if g_git_wing_remote.endswith('.git') else '.git')))
         if not os.path.isdir(os.path.isdir(wingPath + os.sep + '.git')):
             println(ret)
             assert 0, 'Make sure have correct access rights for ' + g_git_wing_remote + ' !'

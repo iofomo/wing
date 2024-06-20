@@ -33,7 +33,7 @@ class BasicArgumentsValue:
         return False
 
     def get(self, index, default=None):
-        if 0 <= index < self.count(): return self.mKeys[index]
+        if (0-self.count()) <= index < self.count(): return self.mKeys[index]
         return default
 
     def getLast(self, index):
@@ -81,20 +81,22 @@ class BasicArgumentsKeyValue:
         l = len(argvs)
         while i < l:
             k = argvs[i]
-            if len(k) <= 1: continue
+            if len(k) <= 1:
+                i += 1
+                continue
             if k.startswith('-'):
                 if (i + 1) < l and not argvs[i + 1].startswith('-'):
                     self.mKeys[k[1:]] = argvs[i + 1]
-                    i = i + 1
+                    i += 1
                 else:
                     self.mKeys[k[1:]] = ''
-            i = i + 1
+            i += 1
 
     def has(self, k):
-        return self.mKeys.has_key(k)
+        return k in self.mKeys
 
     def get(self, k):
-        if self.mKeys.has_key(k): return self.mKeys[k]
+        if k in self.mKeys: return self.mKeys[k]
         return None
 
     def isEmpty(self):

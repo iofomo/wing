@@ -91,5 +91,11 @@
        -space
             Print all the spcase information
 
+    wing plugin commands:
+       -jadx
+            gui tools for Android
+       -apktool <arguments>
+            tools for Android
+
     git commands: all the git commands has remain
        <git command>

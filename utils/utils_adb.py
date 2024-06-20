@@ -54,12 +54,16 @@ class AdbUtils:
         return None
 
     @classmethod
-    def doAdbCmd(cls, cmd):
+    def doAdbCmd(cls, cmd, did=None):
         if not AdbUtils.isADBActive(): return ''
         if 1 < cls.g_adb_env_status:
             adbFile = AdbUtils.getAdbBinFile()
-            return CmnUtils.doCmd(('%s ' % adbFile) + cmd)
-        return CmnUtils.doCmd('adb ' + cmd)
+            return CmnUtils.doCmd(('%s ' % adbFile) + AdbUtils.__get_cmd_did__(did) + cmd)
+        return CmnUtils.doCmd('adb ' + AdbUtils.__get_cmd_did__(did) + cmd)
+
+    @classmethod
+    def __get_cmd_did__(cls, did):
+        return '' if CmnUtils.isEmpty(did) else '-s ' + did + ' '
 
     @classmethod
     def isADBActive(cls):
@@ -76,10 +80,10 @@ class AdbUtils:
         return ImportUtils.getProjectPath() + '/plugin/adb/adb' + CmnUtils.getOsStuffix()
 
     @staticmethod
-    def getFileTimestamp(f):
+    def getFileTimestamp(f, did=None):
         cmd = 'shell date +%s -r "' + f + '"'
         try:
-            ret = AdbUtils.doAdbCmd(cmd)
+            ret = AdbUtils.doAdbCmd(cmd, did)
             if None == ret: return 0
             # LoggerUtils.println(ret)
             ret = ret.strip()
@@ -90,8 +94,8 @@ class AdbUtils:
         return 0
 
     @staticmethod
-    def getDevices():
-        ret = AdbUtils.doAdbCmd('devices')
+    def getDevices(did=None):
+        ret = AdbUtils.doAdbCmd('devices', did)
         items = ret.split('\n')
 
         devices = []
@@ -102,17 +106,17 @@ class AdbUtils:
         return devices
 
     @staticmethod
-    def isDeviceConnected(): return 0 < len(AdbUtils.getDevices())
+    def isDeviceConnected(did=None): return 0 < len(AdbUtils.getDevices(did))
 
     @staticmethod
-    def pull(src, des):
+    def pull(src, des, did=None):
         des1 = os.path.abspath(des)
         ts1 = ts2 = 0
         if os.path.exists(des1): ts1 = FileUtils.getModifyTime(des1)
         des2 = des1 + os.sep + os.path.basename(src)
         if os.path.exists(des2): ts2 = FileUtils.getModifyTime(des2)
 
-        AdbUtils.doAdbCmd('pull "%s" "%s"' % (src, des1))
+        AdbUtils.doAdbCmd('pull "%s" "%s"' % (src, des1), did)
         tsNew = FileUtils.getModifyTime(des1)
         if 0 != tsNew and ts1 < tsNew: return True
         tsNew = FileUtils.getModifyTime(des2)
@@ -120,44 +124,44 @@ class AdbUtils:
         return False
 
     @staticmethod
-    def push(src, des):
+    def push(src, des, did=None):
         src = os.path.abspath(src)
-        ts1 = AdbUtils.getFileTimestamp(des)
+        ts1 = AdbUtils.getFileTimestamp(des, did)
         if os.path.basename(src) != os.path.basename(des):
             des2 = des + os.sep + os.path.basename(src)
-            ts2 = AdbUtils.getFileTimestamp(des2)
+            ts2 = AdbUtils.getFileTimestamp(des2, did)
         else:
             des2 = None
 
-        AdbUtils.doAdbCmd('push "%s" "%s"' % (src, des))
-        tsNew = AdbUtils.getFileTimestamp(des)
+        AdbUtils.doAdbCmd('push "%s" "%s"' % (src, des), did)
+        tsNew = AdbUtils.getFileTimestamp(des, did)
         if 0 != tsNew and ts1 <= tsNew: return True
         if des2 is not None:
-            tsNew = AdbUtils.getFileTimestamp(des2)
+            tsNew = AdbUtils.getFileTimestamp(des2, did)
             if 0 != tsNew and ts2 <= tsNew: return True
         return False
 
     @staticmethod
-    def stop(pkg):
+    def stop(pkg, did=None):
         print('stop: ' + pkg)
-        ret = AdbUtils.doAdbCmd('shell am force-stop %s' % pkg)
+        ret = AdbUtils.doAdbCmd('shell am force-stop %s' % pkg, did)
         print(ret)
 
     @staticmethod
-    def clear(pkg):
+    def clear(pkg, did=None):
         print('clear: ' + pkg)
-        ret = AdbUtils.doAdbCmd('shell pm clear %s' % pkg)
+        ret = AdbUtils.doAdbCmd('shell pm clear %s' % pkg, did)
         print(ret)
 
     @staticmethod
-    def getApkFile(pkgName):
+    def getApkFile(pkgName, did=None):
         while True:
-            ret = AdbUtils.doAdbCmd('shell pm path %s' % pkgName)
+            ret = AdbUtils.doAdbCmd('shell pm path %s' % pkgName, did)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
                     return ret[len('package:'):]
-            ret = AdbUtils.doAdbCmd('shell pm path --user 0 %s' % pkgName)
+            ret = AdbUtils.doAdbCmd('shell pm path --user 0 %s' % pkgName, did)
             if None != ret:
                 ret = ret.strip().split('\n')[0]
                 if ret.startswith('package:') and ret.endswith('apk'):
@@ -165,61 +169,61 @@ class AdbUtils:
             return None
 
     @staticmethod
-    def isInstalled(pkgName):
-        if AdbUtils.getApkFile(pkgName): return True
-        apps = AdbUtils.getInstallApps()
+    def isInstalled(pkgName, did=None):
+        if AdbUtils.getApkFile(pkgName, did): return True
+        apps = AdbUtils.getInstallApps(did)
         if None == apps: return False
         return pkgName in apps
 
     @staticmethod
-    def install(apkFile):
-        ret = AdbUtils.doAdbCmd('install -r "%s"' % apkFile)
+    def install(apkFile, did=None):
+        ret = AdbUtils.doAdbCmd('install -r "%s"' % apkFile, did)
         if None == ret: return False
         if 0 <= ret.lower().find('success'): return True
         print(ret)
         return False
 
     @staticmethod
-    def uninstall(pkgName):
-        ins = AdbUtils.isInstalled(pkgName)
-        ret = AdbUtils.doAdbCmd('uninstall "%s"' % pkgName)
+    def uninstall(pkgName, did=None):
+        ins = AdbUtils.isInstalled(pkgName, did)
+        ret = AdbUtils.doAdbCmd('uninstall "%s"' % pkgName, did)
         if None == ret: return not ins
         return 0 <= ret.lower().find('success') or not ins
 
     @staticmethod
-    def getInstallAppsWithSystem():
+    def getInstallAppsWithSystem(did=None):
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -s'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -s', did): return apps
         return None
 
     @staticmethod
-    def getInstallAppsWithThird():
+    def getInstallAppsWithThird(did=None):
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -3'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -3', did): return apps
         return None
 
     @staticmethod
-    def getInstallAppsWithDisable():
+    def getInstallAppsWithDisable(did=None):
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d', did): return apps
         return None
 
     @staticmethod
-    def getInstallAppsWithEnable():
+    def getInstallAppsWithEnable(did=None):
         apps = set()
-        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e'): return apps
+        if AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e', did): return apps
         return None
 
     @staticmethod
-    def getInstallApps():
+    def getInstallApps(did=None):
         apps = set()
-        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e'): return None
-        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d'): return None
+        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -e', did): return None
+        if not AdbUtils.__getInstallApps__(apps, 'shell pm list packages -d', did): return None
         return apps
 
     @staticmethod
-    def __getInstallApps__(apps, cmd):
-        ret = AdbUtils.doAdbCmd(cmd)
+    def __getInstallApps__(apps, cmd, did=None):
+        ret = AdbUtils.doAdbCmd(cmd, did)
         if CmnUtils.isEmpty(ret): return True
 
         items = ret.split("\n")
@@ -233,12 +237,12 @@ class AdbUtils:
         return True
 
     @staticmethod
-    def launchApp(pkgName, runSteps=1):
-        cmd = "shell monkey -p %s -c android.intent.category.LAUNCHER %d" % (pkgName, runSteps)
-        return AdbUtils.doAdbCmd(cmd)
+    def launchApp(pkgName, did=None):
+        cmd = "shell monkey -p %s -c android.intent.category.LAUNCHER 1" % (pkgName)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
-    def startActivity(pkgName, activityName, tName, tVal, args):
+    def startActivity(pkgName, activityName, tName, tVal, args, did=None):
         """
         launch target app with activity
         :param pkgName:
@@ -253,46 +257,46 @@ class AdbUtils:
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
         cmd = 'shell am start -n %s/%s%s%s' % (pkgName, activityName, atype, astring)
-        return AdbUtils.doAdbCmd(cmd)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
-    def startService(pkgName, serviceName, tName, tVal, args):
+    def startService(pkgName, serviceName, tName, tVal, args, did=None):
         atype = ' --ei %s %d' % (tName, tVal)
         astring = ''
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
         cmd = 'shell am startservice -n %s/%s%s%s' % (pkgName, serviceName, atype, astring)
-        return AdbUtils.doAdbCmd(cmd)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
-    def sendBroadcast(action, tName, tVal, args):
+    def sendBroadcast(action, tName, tVal, args, did=None):
         atype = ' --ei %s %d' % (tName, tVal)
         astring = ''
         for k, v in args.items():
             astring += ' --es %s %s' % (k, v)
         cmd = 'shell am broadcast -a %s%s%s' % (action, atype, astring)
-        return AdbUtils.doAdbCmd(cmd)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     # @staticmethod
-    # def sendBroadcast(pkgName, action, tName, tVal, args):
+    # def sendBroadcast(pkgName, action, tName, tVal, args, did=None):
     #     atype = ' --ei %s %d' % (tName, tVal)
     #     astring = ''
     #     for k,v in args.items():
     #         astring += ' --es %s %s' % (k, v)
     #     cmd = 'shell am broadcast -a %s/%s%s%s' % (pkgName, action, atype, astring)
-    #     return AdbUtils.doAdbCmd(cmd)
+    #     return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
-    def callProvider(authorities, method, arg, extras):
+    def callProvider(authorities, method, arg, extras, did=None):
         extrastring = ''
         for k, v in extras.items():
             extrastring += '--extra %s:s:%s ' % (k, v)
         cmd = 'shell content call --uri content://%s --method %s --arg %s %s' % (authorities, method, arg, extrastring)
-        return AdbUtils.doAdbCmd(cmd)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
-    def startInstrument(pkgName, args=None):
-        ret = AdbUtils.doAdbCmd('shell pm list instrumentation')
+    def startInstrument(pkgName, args=None, did=None):
+        ret = AdbUtils.doAdbCmd('shell pm list instrumentation', did)
         if None == ret:
             LoggerUtils.println('Not found instrument !')
             return -1
@@ -314,7 +318,7 @@ class AdbUtils:
         if None != args:
             for k, v in args.items(): astring += ' -e %s %s' % (k, v)
         cmd = 'shell am instrument -w %s %s' % (target, astring)
-        return AdbUtils.doAdbCmd(cmd)
+        return AdbUtils.doAdbCmd(cmd, did)
 
     @staticmethod
     def __get_value__(line, key):
@@ -326,7 +330,7 @@ class AdbUtils:
         return None
 
     @staticmethod
-    def dumpActivity():
+    def dumpActivity(did=None):
         """
           Stack #0: type=home mode=fullscreen
               isSleeping=false
@@ -358,7 +362,7 @@ class AdbUtils:
                     Run #0: ActivityRecord{6a3b344 u0 com.huawei.android.launcher/.unihome.UniHomeLauncher t1}
         """
         activities = {}
-        ret = AdbUtils.doAdbCmd('shell dumpsys activity')
+        ret = AdbUtils.doAdbCmd('shell dumpsys activity', did)
         if ret.startswith('error:') or len(ret) < 256:
             LoggerUtils.w(ret)
             return activities
@@ -399,18 +403,17 @@ class AdbUtils:
         return activities
 
     @staticmethod
-    def isTopPackageActivity(pkg, activity=None):
-        activities = AdbUtils.dumpActivity()
-        if pkg not in activities: return False
-        # Intent { flg=0x10000000 cmp=com.demo/com.demo.MainActivity (has extras) }
-        return None == activity or 0 < activities.get(pkg).find('/' + activity + ' ')
+    def isTopPackageActivity(pkg, activity=None, did=None):
+        topWinPackage, topActivityPackage = AdbUtils.dumpTop(did)
+        return pkg == topActivityPackage
 
     @staticmethod
-    def isTopPackageWindow(pkg):
-        return pkg in AdbUtils.dumpWindow()
+    def isTopPackageWindow(pkg, did=None):
+        topWinPackage, topActivityPackage = AdbUtils.dumpTop(did)
+        return pkg == topWinPackage
 
     @staticmethod
-    def dumpWindow():
+    def dumpWindow(did=None):
         """
           Window #7 Window{37172e1 u0 com.demo}:
             mDisplayId=0 stackId=0 mSession=Session{39faa2d 23185:u0a10339} mClient=android.os.BinderProxy@3a79ab5
@@ -440,7 +443,7 @@ class AdbUtils:
               mShownAlpha=1.0 mAlpha=1.0 mLastAlpha=0.0
         """
         windows = set()
-        ret = AdbUtils.doAdbCmd('shell dumpsys window')
+        ret = AdbUtils.doAdbCmd('shell dumpsys window', did)
         # print(ret)
         if ret.startswith('error:'):
             LoggerUtils.w(ret)
@@ -475,9 +478,9 @@ class AdbUtils:
         return windows
 
     @staticmethod
-    def printlnDump():
-        activities = AdbUtils.dumpActivity()
-        windows = AdbUtils.dumpWindow()
+    def printlnDump(did=None):
+        activities = AdbUtils.dumpActivity(did)
+        windows = AdbUtils.dumpWindow(did)
         if 0 < len(windows):
             LoggerUtils.println('Top Window: ')
             for app in windows: LoggerUtils.println('\tpackage: ' + app)
@@ -496,24 +499,26 @@ class AdbUtils:
         return None
 
     @staticmethod
-    def dumpTop():
+    def dumpTop(did=None):
+        topWinPackage, topActivityPackage = None, None
         # top windows
-        wret = AdbUtils.doAdbCmd('shell dumpsys window | grep mCurrentFocus')
-        LoggerUtils.println(None if CmnUtils.isEmpty(wret) else wret.strip())
+        wret = AdbUtils.doAdbCmd('shell dumpsys window | grep mCurrentFocus', did)
+        # LoggerUtils.println('mCurrentFocus: None' if CmnUtils.isEmpty(wret) else wret.strip())
         # top activity
-        aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep mResumedActivity"')
+        aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep mResumedActivity"', did)
         if CmnUtils.isEmpty(aret):
-            aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep ResumedActivity"')
-        LoggerUtils.println(None if CmnUtils.isEmpty(aret) else aret.strip())
+            aret = AdbUtils.doAdbCmd('shell "dumpsys activity activities | grep ResumedActivity"', did)
+        # LoggerUtils.println('mResumedActivity: None' if CmnUtils.isEmpty(aret) else aret.strip())
 
-        LoggerUtils.println(' ')
+        # LoggerUtils.println(' ')
         if CmnUtils.isEmpty(wret):
             LoggerUtils.w("Top window none")
         elif 0 <= wret.find('error:'):
             LoggerUtils.w("dump top window fail")
         else:
             #  mCurrentFocus=Window{3222263 u0 com.sdu.didi.gsui/com.sdu.didi.gsui.main.MainActivity}
-            LoggerUtils.println('Top Window App: ' + AdbUtils.__do_parser_package_name__(wret))
+            topWinPackage = AdbUtils.__do_parser_package_name__(wret)
+            # LoggerUtils.println('Top Window App: ' + ('' if CmnUtils.isEmpty(topWinPackage) else topWinPackage))
 
         if CmnUtils.isEmpty(aret):
             LoggerUtils.w("Top activity none")
@@ -521,7 +526,9 @@ class AdbUtils:
             LoggerUtils.w("dump top activity fail")
         else:
             #  mResumedActivity: ActivityRecord{38e7b1 u0 com.sdu.didi.gsui/.main.MainActivity t4265}
-            LoggerUtils.println('Top Activity App: ' + AdbUtils.__do_parser_package_name__(aret))
+            topActivityPackage = AdbUtils.__do_parser_package_name__(aret)
+            # LoggerUtils.println('Top Activity App: ' + ('' if CmnUtils.isEmpty(topActivityPackage) else topActivityPackage))
+        return topWinPackage, topActivityPackage
 
 
 def run():
