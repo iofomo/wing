@@ -9,6 +9,8 @@
     <img src="doc/README.assets/python-2x3x.svg" alt="python:2x3x" />
 </p>
 
+[☞ 官网下载 ☜](https://www.iofomo.com/docs/desktop/wing/Introduce/)
+
 ### 导航
 
 -   [新手使用](doc/get-start.md)
