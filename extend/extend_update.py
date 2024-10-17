@@ -147,6 +147,11 @@ def doUpdatePlugin(name, tempPath):
         LoggerUtils.e('invalid plugin file')
         return False
 
+    # print ver
+    with open(verFile, 'r') as f :
+        ver = f.readline()
+        LoggerUtils.println(name + ': ' + ver)
+
     # flush
     targetPath = os.path.dirname(g_wing_path) + '/plugin/' + name
     FileUtils.remove(targetPath)
@@ -159,6 +164,7 @@ def doUpdatePlugin(name, tempPath):
         return False
 
     CmnUtils.doCmd('chmod -R +x ' + targetPath)
+
     LoggerUtils.println('update success')
     return True
 
@@ -173,14 +179,19 @@ def doUpdateWing(tempPath):
     CmnUtils.doCmd('python %s install' % CmnUtils.formatCmdArg(f))
     FileUtils.remove(os.path.dirname(f))
 
+def showHelp():
+    LoggerUtils.println('wing -update [jadx/apktool/mobtool]')
+
 def run():
     """
     wing -update
     wing -update jadx
     wing -update apktool
+    wing -update mobtool
     """
     za = BasicArgumentsValue()
     envPath, spacePath, typ = za.get(0), za.get(1), za.get(2)
+    if typ is None: showHelp()
 
     tempPath = os.path.dirname(g_wing_path) + '/temp'
     try:
@@ -189,6 +200,8 @@ def run():
             doUpdatePlugin('jadx', tempPath)
         elif typ == 'apktool':
             doUpdatePlugin('apktool', tempPath)
+        elif typ == 'mobtool':
+            doUpdatePlugin('mobtool', tempPath)
         elif typ is not None:
             LoggerUtils.w('UNSupport plugin: ' + typ)
         # add more plugin here ...

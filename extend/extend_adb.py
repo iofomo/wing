@@ -92,10 +92,28 @@ def doDumpUi(path):
     ret, err = CmnUtils.doCmdEx('adb shell uiautomator dump ' + src)
     if CmnUtils.isEmpty(ret) or ret.find('xml') <= 0:
         LoggerUtils.error('Error: fail dump ui, ' + ret + ', ' + err)
-        return
-    outFile = path + '/ui.xml'
-    AdbUtils.pull(src, outFile)
-    LoggerUtils.light('>>> ' + outFile)
+    else:
+        outFile = path + '/ui.xml'
+        AdbUtils.pull(src, outFile)
+        LoggerUtils.light('>>> ' + outFile)
+
+    LoggerUtils.println('dump activity')
+    outFile = path + '/activity.xml'
+    ret = CmnUtils.doCmd('adb shell dumpsys activity > ' + outFile )
+    # print(ret)
+    if os.path.isfile(outFile):
+        LoggerUtils.light('>>> ' + outFile)
+    else:
+        LoggerUtils.error('Error: fail dump activity, ' + ret + ', ' + err)
+
+    LoggerUtils.println('dump window')
+    outFile = path + '/window.xml'
+    ret = CmnUtils.doCmd('adb shell dumpsys window > ' + outFile)
+    # print(ret)
+    if os.path.isfile(outFile):
+        LoggerUtils.light('>>> ' + outFile)
+    else:
+        LoggerUtils.error('Error: fail dump window, ' + ret + ', ' + err)
 
 
 def doDumpLogger(path):

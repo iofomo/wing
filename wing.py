@@ -29,9 +29,9 @@ except Exception as e:
     pass
 
 # wing version, wing -v
-g_ver = '1.3.0'
+g_ver = '1.3.1'
 # wing publish time, wing -v
-g_date = '2024.06.10'
+g_date = '2024.07.10'
 g_git_host = 'git@codeup.aliyun.com:63e5fbe89dee9309492bc30c'
 g_git_wing_remote = 'platform/wing'
 g_git_wing_branch = 'master'

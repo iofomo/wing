@@ -94,6 +94,7 @@ def run():
         print('The most similar command is:')
         print('         pack')
         print('         publish')
+        print('         publish <plugin file>')
         return
 
     wingFile = os.path.dirname(g_this_path) + '/wing.zip'

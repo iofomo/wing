@@ -21,7 +21,7 @@ from basic.arguments import BasicArgumentsValue
 
 g_wing_path = ImportUtils.initEnv(os.path.dirname(g_this_path))
 
-BASE_URL_FMT = 'http://www.iofomo.com/download/scrcpy/scrcpy-%s'
+BASE_URL_FMT = 'http://www.iofomo.com/download/wing/plugin/scrcpy/scrcpy-%s'
 # --------------------------------------------------------------------------------------------------------------------------
 def doEnvPrepare():
     AdbUtils.ensureEnv()

@@ -42,16 +42,23 @@ def run():
     if name == '-jadx':
         pluginPath = os.path.dirname(g_wing_path) + '/plugin/jadx'
         if not os.path.isfile(pluginPath + '/jadx.ver'):
-            LoggerUtils.e('\tjadx not install, run \"wing -update\"')
+            LoggerUtils.e('\tjadx not install, run \"wing -update jadx\"')
             return
         CmnUtils.doCmdCall(pluginPath + '/bin/jadx-gui&')
         return
     if name == '-apktool':
         pluginPath = os.path.dirname(g_wing_path) + '/plugin/apktool'
         if not os.path.isfile(pluginPath + '/apktool.ver'):
-            LoggerUtils.e('\tapktool not install, run \"wing -update\"')
+            LoggerUtils.e('\tapktool not install, run \"wing -update apktool\"')
             return
         CmnUtils.doCmdCall('cd ' + envPath + ' && java -jar ' + pluginPath + '/apktool.jar ' + ' '.join(za.getLast(3)))
+        return
+    if name == '-mobtool':
+        pluginPath = os.path.dirname(g_wing_path) + '/plugin/mobtool'
+        if not os.path.isfile(pluginPath + '/mobtool.ver'):
+            LoggerUtils.e('\tmobtool not install, run \"wing -update mobtool\"')
+            return
+        CmnUtils.doCmdCall('cd ' + envPath + ' && python ' + pluginPath + '/tools.py &')
         return
     assert 0, 'Unsupported type: ' + name
 

@@ -169,7 +169,7 @@ def run(_argv):
     if typ in ['-branch', '-push', '-status']: return doGit(_argv)
     if '-create' == typ: return doCreate(_argv)
     if '-tree' == typ: return doTree(argv)
-    if typ in ['-jadx', '-apktool']: return doPlugin(_argv)
+    if typ in ['-jadx', '-apktool', '-mobtool']: return doPlugin(_argv)
 
     return doExtendCommand(typ[1:], argv)
 
