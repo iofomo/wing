@@ -47,6 +47,11 @@
                 get all running services and log info from Android device
             list
                 get all install app list
+        -cocollider {type}
+            scan <path>
+                scan target path or current env path if none path
+            run <file>
+                call Fireyer app to get results from scan file
 
     wing project commands:
        -create [type name]

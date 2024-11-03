@@ -138,7 +138,7 @@ def run():
     # "wing -key hash ${string}"
     if cmd == 'hash': return doHash(argv.get(3))
 
-    showHelp();
+    showHelp()
 
 
 if __name__ == "__main__":
