@@ -16,6 +16,8 @@
 -   [新手使用](doc/get-start.md)
 -   [更多命令](doc/user-guide.md)
 -   [开发指南](doc/develop-guide.md)
+-   [【wing】背后的插件们](https://www.iofomo.com/blog/wingplugins)
+-   [【CoCollider】Android平台系统版本快捷适配工具](https://www.iofomo.com/blog/code-collider)
 
 ### 说明
 
